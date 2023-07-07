@@ -1,0 +1,27 @@
+
+CXX	= g++
+CXXFLAGS = -Ofast -I/usr/include/SDL2 -D_REENTRANT 
+CXXFLAGS2 = -lSDL2 -lSDL2_ttf
+
+#Including OPUS Libraries
+#LDFLAGS = -lc -lm -lstdc++ -lSDL -lSDL_mixer
+
+DEFINES = -Wall
+OUTPUT = growf
+
+OBJS += $(patsubst %.cpp, %.o, $(shell find . -name \*.cpp))
+
+SRCDIR		= ./src ./src/obj
+VPATH		= $(SRCDIR)
+SRC		= $(foreach dir, $(SRCDIR), $(wildcard $(dir)/*.cpp))
+OBJ		= $(notdir $(patsubst %.cpp, %.o, $(SRC)))
+OBJS		= $(OBJ)
+
+all: clean ${OUTPUT} clean
+
+${OUTPUT}: ${OBJS}
+	${CXX} ${CXXFLAGS} -o ${OUTPUT} ${OBJS} ${DEFINES} ${CXXFLAGS2} 
+
+	
+clean:
+	rm -f *.o
