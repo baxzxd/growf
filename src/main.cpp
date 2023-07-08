@@ -41,25 +41,9 @@
 #include "audio.h"
 using namespace std;
 
-V2 playerDir;
-V2 lastPlayerDir;
 
 int keys[256];
 int gameState = 0;
-// function to find if given
-// point lies inside a given
-// rectangle or not
-/*
-bool PointInRect(Vector2 pos, Vector2 rectPos, Vector2 rectSize) {
-    float x = pos.X;
-    float y = pos.Y;
-    float x1 = rectPos.X;
-    float y1 = rectPos.Y;
-    float x2 = rectPos.X + rectSize.X;
-    float y2 = rectPos.Y + rectSize.Y;
-    return x > x1 && x < x2 && y > y1 && y < y2;
-}*/
-
 //Gobj* objGrid[13][128];
 /// cellX,cellY are output
 V2 RandV2(int r) {
@@ -90,54 +74,23 @@ void GetObjCell(Gobj* obj, int *cellX, int *cellY) {
 void Game_RegenWorld() {
     
 }
-int mouseX, mouseY;
 float del = 0;
 Uint64 lastTick = 0;
 Uint64 tick = 0;
-void GetVecInfo(float x, float y, float *len, float *normX, float *normY) {
-    *len = sqrt(x*x + y*y);
-    *normX = x / *len;
-    *normY = y / *len;
-}
-V2 GetMousePos() {
-    int mouseX,mouseY;
-    SDL_GetMouseState(&mouseX,&mouseY);
-    return {(float)mouseX, (float)mouseY};
-
-}
-
-Gobj* proj;
 V2 d, dNorm,mousePos;
 float len;
-void Player_Action() {
-    selObj = Obj_CheckAtMouse();
-    // fire projectile
-    d = mousePos - playerObj->pos;
-    dNorm = d.Norm();
-    proj = Obj_Create(3,playerObj->pos + dNorm * 24.0f, dNorm * 500.0f, .5f);
-    proj->energy = -50.0f;
-}
-void Player_ReleaseAction() {
-    Gobj *hovered = Obj_CheckAtMouse();
-
-    if( !selObj || !hovered )
-        return;
-    
-    selObj->target = hovered;
-    std::cout<<"outher sel"<<std::endl;
-}
-
-void Player_AltAction() {
-
-}
-
 float joystickAxes[6];
 V2 controllerCursorPos;
 V2 controllerSmartCursorPos;
 V2 joyV;
 int triggerHeld[2];
 bool usingJoystick = false;
-
+int mouseX, mouseY;
+V2 GetMousePos() {
+    int mouseX,mouseY;
+    SDL_GetMouseState(&mouseX,&mouseY);
+    return {(float)mouseX, (float)mouseY};
+}
 
 void EnterGameLoop() {
 
@@ -188,17 +141,17 @@ void EnterGameLoop() {
 
                 switch(e.button.button){
                     case 1:
-                        Player_Action();
+                        Player_Use();
                     break;
                     case 2:
-                        Player_AltAction();
+                        Player_ReleaseUse();
                     break;
 
                 }
             break;
             case SDL_MOUSEBUTTONUP:
                 usingJoystick = false;
-                Player_ReleaseAction();
+                Player_ReleaseUse();
             break;
 
             case SDL_KEYDOWN:
@@ -286,7 +239,7 @@ void EnterGameLoop() {
         }
         else if( joystickAxes[4] > .5f ) {
             triggerHeld[0] = 1;
-            Player_Action();
+            Player_Use();
         }
 
         // Initialize renderer color white for the background

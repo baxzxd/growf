@@ -29,7 +29,7 @@ extern SDL_Texture *charTextures[128];
 #define SCREEN_WIDTH    800
 #define SCREEN_HEIGHT   600
 
-void Render_String(string s, V2 pos);
+void Render_String(string s, V2 pos, int w, int h);
 SDL_Texture *Render_PrerenderString(char* s); 
 SDL_Texture *Render_PrerenderStringsFromFile(char* path); 
 int Render_Init();

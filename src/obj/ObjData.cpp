@@ -19,5 +19,5 @@ GobjData objData[5] = {
     {"Tree",20, {8,8}, Color_RGBToInt(0,200,25), &objFuncs[1]},
     {"Dog",2, {10,10}, Color_RGBToInt(232,122,0), &objFuncs[2]},
     {"Box",50,{12,12}, Color_RGBToInt(255,165,0), &objFuncs[3]},
-    {"Hopper",50,{48,48}, Color_RGBToInt(100,100,100), &objFuncs[4]}
+    {"Hopper",50,{16,16}, Color_RGBToInt(200,0,255), &objFuncs[4]}
 };

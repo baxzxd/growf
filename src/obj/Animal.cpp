@@ -6,19 +6,46 @@
 #include "../color.h"
 #include "../render.h"
 #include "ObjMain.h"
+#include "ObjUtil.h"
+
 #include "ObjPhys.h"
 #include "StandardObjs.h"
 
+int Animal_Update() {
+    bool m = false;
+    if( o->parent ) {
+        Animal_Follower();
+    }
+    else {
+        if( o->target ) {
+
+            float targetDist = Obj_SqrDist(o,o->target);
+            if( targetDist < 24 ) {
+                Obj_GiveHealth(o->target, -1);
+                o->target->vel = o->target->vel + (o->target->pos-o->pos).Norm() * 100;
+
+            }
+            else {
+                Obj_MoveTo(o, o->target, 95.0f);
+            }
+        }
+        else
+            Animal_Wanderer();
+    }
+    return 0;
+}
 void Animal_Wanderer() {
     for( int i = 0; i < maxObjects; i++ ) {
         Gobj *other = &objects[i];
         if( other == o || !Obj_HasFlag(other, IN_WORLD) )
             continue;
+        
         float d = (objects[i].pos - o->pos).Len();
         if( d > 24*24 ) 
             continue;
+
         if( o->id != other->id ) {
-            if( Obj_HasFlag(other,LIVING))
+            if( Obj_HasFlag(other,LIVING) && o->team != other->team )
                 o->target = other;
         }
         else {
@@ -39,44 +66,28 @@ void Animal_Wanderer() {
         o->vel = o->vel + v;
     }
 }
+void MoveToAndAttack(Gobj *obj, Gobj *t, float speed, float minDist, float attackDist) {
+    float targetDist = Obj_SqrDist(obj,t);
+    if( targetDist < minDist ) {
+        Obj_MoveTo(obj, t, speed);
+        if( targetDist < attackDist ) {
+            Obj_GiveHealth(t, -1);
+            t->vel = t->vel + (t->pos-obj->pos).Norm() * 100;
+
+            
+            // add timer
+        }
+    }
+}
 void Animal_Follower() {
     // change dist if parent attacking
     if( o->target ) {
-        Obj_MoveTo(o,o->target, 150);
+        MoveToAndAttack(o, o->target, 95.0f, 24, 100);
     }
     else if( o->parent->target ) {
-        float targetDist = Obj_SqrDist(o,o->parent->target);
-        if( targetDist < 50 ) {
-            Obj_MoveTo(o, o->parent->target, 95.0f);
-            if( targetDist < 20 ) {
-                Obj_GiveHealth(o->parent->target, -1);
-                o->parent->target->vel = o->parent->target->vel + (o->parent->target->pos-o->pos).Norm() * 100;
-
-                
-                // add timer
-            }
-        }
-        else {
-            if( Obj_SqrDist(o, o->parent) > 60 ) {
-                Obj_MoveTo(o,o->parent, 95.0f);
-            }
-        }
+        MoveToAndAttack(o, o->parent->target, 95.0f, 24, 50);
     }
     else if( Obj_SqrDist(o, o->parent) > 60 ) {
         Obj_MoveTo(o,o->parent, 95.0f);
     }
-}
-int Animal_Update() {
-    bool m = false;
-    if( o->parent ) {
-        Animal_Follower();
-    }
-    else {
-        if( o->target ) {
-            Obj_MoveTo(o, o->target, 95.0f);
-        }
-        else
-            Animal_Wanderer();
-    }
-    return 0;
 }

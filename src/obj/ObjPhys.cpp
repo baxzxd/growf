@@ -7,6 +7,7 @@
 #include "../color.h"
 #include "../render.h"
 #include "ObjMain.h"
+#include "ObjUtil.h"
 #include "ObjPhys.h"
 using namespace std;
 

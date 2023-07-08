@@ -35,12 +35,14 @@ csv templates
 */
 #include <iostream>
 #include <algorithm>
+#include <vector>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include "../main.h"
 #include "../color.h"
 #include "../render.h"
 #include "ObjMain.h"
+#include "ObjUtil.h"
 #include "ObjPhys.h"
 #include "StandardObjs.h"
 
@@ -69,8 +71,8 @@ void Obj_Init() {
     playerObj = Obj_Create(0,{200.0f,200.0f},1);
     Obj_SetFlag(playerObj, LIVING, true);
 
-    //Gobj *hopper = Obj_Create(4, {(float)(rand()%SCREEN_WIDTH),(float)(rand()%SCREEN_HEIGHT)}, 1);
-    for( int i = 0; i < 2; i++ ) {            
+    Gobj *hopper = Obj_Create(4, {(float)(rand()%SCREEN_WIDTH),(float)(rand()%SCREEN_HEIGHT)}, 1);
+    for( int i = 0; i < 7; i++ ) {            
         Obj_Create(1, {(float)(rand()%SCREEN_WIDTH),(float)(rand()%SCREEN_HEIGHT)}, 1);
     }
 }            
@@ -111,50 +113,89 @@ void Obj_Render(Gobj *obj) {
 }     
 
 
+void Tick(Gobj *obj) {
+    o = obj;
+    oData = o->data;
 
-void Obj_Tick() {
-    for( int i = 0; i < maxObjects; i++ ) {
-        o = &objects[i];
-        oData = o->data;
+    if( !Obj_HasFlag(o, IN_WORLD) ) 
+        return;
+    if( Obj_HasFlag(o, JUST_CREATED) ) {
+        if( o->data->funcs->funcInit )
+            o->data->funcs->funcInit();
+        Obj_SetFlag(o,JUST_CREATED, false);
+        return;
+    }
 
-        if( !Obj_HasFlag(o, IN_WORLD) ) 
-            continue;
-        if( Obj_HasFlag(o, JUST_CREATED) ) {
-            if( o->data->funcs->funcInit )
-                o->data->funcs->funcInit();
-            Obj_SetFlag(o,JUST_CREATED, false);
-            continue;
-        }
+    Obj_Physics(del);
 
-        Obj_Physics(del);
+    if( o->immunity > 0 ) {
+        o->immunity -= del;
+        if( o->immunity <= 0 )
+            o->immunity = 0;
+    }
 
-        if( o->immunity > 0 ) {
-            o->immunity -= del;
-            if( o->immunity <= 0 )
-                o->immunity = 0;
-        }
+    // generic decay func?
 
-        // generic decay func?
-
-        if( oData->funcs->funcUpdate)
-            oData->funcs->funcUpdate();
-        
-        V2 rSize = Obj_GetSize(o);
-        o->cPos = o->pos + rSize / 2;
-        
-        if( !o->held ) {
-            Obj_Render(o);
-            if( oData->funcs->funcRender )
-                oData->funcs->funcRender();
-            if( o->childCount ) {
-                for( int i = 0; i < CHILD_COUNT; i++ ) {
-                    if( o->children[i].inactive )
-                        continue;
-                    o->children[i].o->pos = o->pos + o->children[i].pos;
-                    Obj_Render(o->children[i].o);
-                }
+    if( oData->funcs->funcUpdate)
+        oData->funcs->funcUpdate();
+    
+    V2 rSize = Obj_GetSize(o);
+    o->cPos = o->pos + rSize / 2;
+    
+    if( !o->held ) {
+        Obj_Render(o);
+        if( oData->funcs->funcRender )
+            oData->funcs->funcRender();
+        if( o->childCount ) {
+            for( int i = 0; i < CHILD_COUNT; i++ ) {
+                if( o->children[i].inactive )
+                    continue;
+                o->children[i].o->pos = o->pos + o->children[i].pos;
+                Obj_Render(o->children[i].o);
             }
         }
+    }
+}
+float spawnTime = 0;
+float spawnTimer = 0;
+Gobj *spawns[16];
+int spawnss = 0;
+void Obj_Tick() {
+    
+    for( int i = 0; i < 16; i++ ) {
+        if( spawns[i] && spawns[i]->health == -1 ) {
+            std::cout<<"dog spawn died"<<std::endl;
+            spawns[i]->reserved = false;
+            spawns[i] = 0;
+            spawnss--;
+        }
+    }
+    if( spawnss < 5 ) {
+        spawnTime -= del;
+        if( spawnTime <= 0 ) {
+            V2 pos;
+            pos = {(float)(rand()%SCREEN_WIDTH), 0.0f};
+            
+            Gobj *spawn = Obj_Create(2,pos,RandV2(100),2);
+            spawn->team = 1;
+
+            int r = -1;
+            for( int i = 0; i < 16; i++ ) {
+                if( !spawns[i] ) {
+                    r = i;
+                    break;
+                }
+            }   
+            spawns[r] = spawn;
+            spawnss++;
+            spawn->reserved = true;
+
+            spawnTime = rand()%4+1;
+        }
+    }
+
+    for( int i = 0; i < maxObjects; i++ ) {
+        Tick(&objects[i]);
     }
 
     if( selObj ) {
@@ -163,7 +204,7 @@ void Obj_Tick() {
         SDL_Rect r;
         SDL_RenderDrawRect(renderer, Obj_GetRect(selObj, &r));
 
-        Render_String(selObj->data->id + ":" + std::to_string(selObj->health), {(float)r.x,(float)r.y});
+        Render_String(selObj->data->id + ":" + std::to_string(selObj->health), {(float)r.x,(float)r.y}, 12,15);
     }
 }
 void Obj_Collide(Gobj *obj, Gobj *collObj) {

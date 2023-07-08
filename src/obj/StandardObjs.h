@@ -24,6 +24,8 @@ void Player_Init();
 void Box_Init();
 int Animal_Update();
 int Player_Update();
+void Player_Use();
+void Player_ReleaseUse();
 int Box_Update();
 int Hopper_Update();
 

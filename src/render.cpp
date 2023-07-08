@@ -17,7 +17,9 @@ TTF_Font* font;
 
 SDL_Rect textRect = {120,120,24,30};
 
-void Render_String(string s, V2 pos) {
+void Render_String(string s, V2 pos, int w, int h) {
+    textRect.w = w;
+    textRect.h = h;
     for( int i = 0; i < s.length(); i++ ) {
         textRect.x = pos.x + textRect.w * i;
         textRect.y = pos.y - (textRect.h + 4);

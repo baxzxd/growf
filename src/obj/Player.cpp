@@ -6,15 +6,18 @@
 #include "../color.h"
 #include "../render.h"
 #include "ObjMain.h"
+#include "ObjUtil.h"
 #include "ObjPhys.h"
 #include "StandardObjs.h"
 
+V2 playerDir;
+SDL_Rect interactRect = {0,0,32,32};
+V2 lastPlayerDir;
+int controls[32];
 
 // grab all objects in interact rect and cycle through them
 // only allow certain number of objects to allow throwing as projectiles
 // fuse everything together?
-SDL_Rect interactRect = {0,0,32,32};
-int controls[32];
 int Player_Update() {
     V2 joyAxes = {joystickAxes[0], joystickAxes[1] };
     if( abs(joyAxes.x) < .05f )
@@ -45,4 +48,23 @@ int Player_Update() {
     
     lastPlayerDir = playerDir;
     return 0;
+}
+
+Gobj* proj;
+void Player_Use() {
+    selObj = Obj_CheckAtMouse();
+    // fire projectile
+    d = mousePos - playerObj->pos;
+    dNorm = d.Norm();
+    proj = Obj_Create(3,playerObj->pos + dNorm * 24.0f, dNorm * 500.0f, .5f);
+    proj->energy = -50.0f;
+}
+void Player_ReleaseUse() {
+    Gobj *hovered = Obj_CheckAtMouse();
+
+    if( !selObj || !hovered )
+        return;
+    
+    selObj->target = hovered;
+    std::cout<<"outher sel"<<std::endl;
 }

@@ -6,6 +6,7 @@
 #include "../color.h"
 #include "../render.h"
 #include "ObjMain.h"
+#include "ObjUtil.h"
 #include "ObjPhys.h"
 #include "StandardObjs.h"
 
@@ -59,7 +60,7 @@ int Plant_Update() {
                     // green to orange
                     //Obj_SetGrowGradient( Color_RGBToInt(0, 165, 0), Color_RGBToInt(255, 165, 0));
                     Obj_AddChild(o, fruit, 100, supPos);
-                    Obj_SetFlag(fruit, LIVING, true);
+                    //Obj_SetFlag(fruit, LIVING, true);
                 }
             }
         break;

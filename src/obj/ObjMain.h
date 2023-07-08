@@ -33,10 +33,6 @@ typedef enum {
     NO_COLLISION = 7,
     STATIC = 8
 } Gobj_Flags;
-typedef enum {
-    TIMERGROWTH = 0,
-    TIMERDECAY = 1
-} Gobj_Timers;
 struct Gobj;
 struct Gobj_Child {
     Gobj* o;
@@ -50,6 +46,7 @@ struct Gobj {
     V2 pos;
     V2 cPos;
     V2 vel;
+    int team = 0;
     int health = 10;
     int color = 256;
     int growthStage;
@@ -57,15 +54,23 @@ struct Gobj {
     float scale = 1;
     float immunity = 0;
     int tickArgs[32];
-    float timers[8]; // every other index stores actual timer? first stores default value?
+    float timers[16]; // every other index stores actual timer? first stores default value?
     int state = 0;
     bool held;
+    
+    /// reserved is used by modes to hold dead object so its not overwritten?
+    bool reserved = false;
 
     int energy; ///used for health loss, moving?
     bool flags[64];
 
+    // array of pointers instead to use funcs? obj keeps count of references to it and then is freed
     Gobj *parent;
     Gobj *target;
+
+    Gobj *pointers[8];
+    int referencesTo = 0;
+
     GobjData *data;
 
     int childCount;
@@ -95,25 +100,13 @@ extern Gobj *playerObj;
 extern Gobj *o;
 extern Gobj *selObj;
 
-
-bool  Obj_HasFlag(Gobj *o, Gobj_Flags flag);
-void Obj_SetFlag(Gobj *o, Gobj_Flags flag, bool s);
 void Obj_Init();
 void Obj_Tick();
-V2 Obj_GetSize(Gobj *obj);
 void Obj_Render(Gobj *obj);
-Gobj* Obj_Create(int id, V2 pos, float sc);
-Gobj* Obj_Create(int id, V2 pos, V2 vel, float sc);
 void Obj_Death(Gobj *obj);
 void Obj_GiveHealth(Gobj *obj, int h);
-void Obj_FillArrayHole();
 void Obj_GetGlobalCenter(Gobj *obj, V2 *outPos);
 void Obj_MoveTo(Gobj *objA, Gobj *objB, float f);
-float Obj_SqrDist(Gobj *objA, Gobj *objB);
-void Obj_AddChild(Gobj *obj, Gobj *child, int bond, V2 pos);
-void Obj_RemoveChild(Gobj *obj, int i);
-void Obj_CheckChild(Gobj *obj, Gobj *child);
-SDL_Rect *Obj_GetRect(Gobj *obj, SDL_Rect *r);
 
 /// checks if selObj needs updated, or for obj interactions
 Gobj* Obj_CheckAtMouse();

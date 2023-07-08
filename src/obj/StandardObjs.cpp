@@ -6,6 +6,7 @@
 #include "../color.h"
 #include "../render.h"
 #include "ObjMain.h"
+#include "ObjUtil.h"
 #include "ObjPhys.h"
 #include "StandardObjs.h"
 
@@ -38,9 +39,8 @@ int Hopper_Update() {
         
         float d = Obj_SqrDist(o, &objects[i]);
         if( d < 160 ) {
-            objects[i].energy = 0;
             Obj_MoveTo(&objects[i], o, 140.0f);
-            if( d < 48 ) {
+            if( d < 12 ) {
                 Obj_GiveHealth(&objects[i], -objects[i].health);
 
                 o->energy += 10;
@@ -56,9 +56,9 @@ int Hopper_Render() {
     float energyRatio = (float)o->energy/100.0f;
     SDL_Rect r;
     r.w = (int)(100.0f * energyRatio);
-    r.h = 16;
-    r.x = (int)o->pos.x;
-    r.y = (int)o->pos.y;
+    r.h = 4;
+    r.x = (int)o->pos.x - r.w/2;
+    r.y = (int)o->pos.y ;
     
     //Render_SetDrawColor(Color_LerpColor(orangeStart,orangeEnd, energyRatio), 255);
     SDL_RenderFillRect(renderer, &r);
