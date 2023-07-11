@@ -104,6 +104,26 @@ Gobj* Obj_CheckAtMouse() {
     }
     return 0;
 }
+void Obj_SetTimer(Gobj *obj, float v, Gobj_Timers timer) {
+    obj->timers[timer*2] = v;
+    obj->timers[timer] = 0;
+}
+bool Obj_TickTimer(Gobj *obj, Gobj_Timers timer) {
+    obj->timers[timer] += del;
+    if( obj->timers[timer] > obj->timers[timer*2] ) {
+        obj->timers[timer] = 0;
+        return true;
+    }
+    return false;
+}
+bool Obj_TickTimer(Gobj *obj, Gobj_Timers timer, float v) {
+    obj->timers[timer] += del;
+    if( obj->timers[timer] > v ) {
+        obj->timers[timer] = 0;
+        return true;
+    }
+    return false;
+}
 
 Gobj* Obj_Create(int id, V2 pos, float sc);
 Gobj* Obj_Create(int i, V2 pos, V2 vel, float sc) {
@@ -134,8 +154,7 @@ Gobj* Obj_Create(int id, V2 pos, float sc) {
     obj->health = obj->data->maxHealth;
     obj->immunity = 0;
 
-    obj->timers[0] = 2;
-    obj->timers[1] = 2;
+    Obj_SetTimer(obj, 2, TIMERGROWTH);
     
     obj->reserved = false;
     obj->held = false;
@@ -152,12 +171,15 @@ Gobj* Obj_Create(int id, V2 pos, float sc) {
 }
 
 Gobj *Obj_GetPointed(Gobj *obj, OBJ_POINTERS p) {
-    return 0;
+    return obj->pointers[p];
 }
 Gobj *Obj_SetPointed(Gobj *obj, Gobj *other, OBJ_POINTERS t) {
     if( obj->pointers[t] ) {
-        obj->pointers[t]->referencesTo--;
+        obj->pointers[t]->referencesTo += -1;
     }
     obj->pointers[t] = other;
+    if( other ) {
+        obj->pointers[t]->referencesTo += 1;
+    }
     return 0;
 }

@@ -2,12 +2,13 @@
 #define OBJ_MAIN
 #include <SDL2/SDL.h>
 
+struct Gobj;
 struct Gobj_Func {
     int (*funcInit)();
     int (*funcRender)();
     int (*funcUpdate)();
-    int (*funcUse)();
-    int (*funcDeath)();
+    int (*funcUse)(Gobj *obj);
+    int (*funcDeath)(Gobj *obj);
 };
 /// id, health, w, h, scale, color, update
 
@@ -70,7 +71,7 @@ struct Gobj {
 
     // array of pointers instead to use funcs? obj keeps count of references to it and then is freed
     Gobj *parent;
-    Gobj *target;
+    //Gobj *target;
 
     Gobj *pointers[OBJ_POINTER_AMOUNT];
     int referencesTo = 0;
@@ -108,7 +109,7 @@ struct ObjController {};
 extern int totalObjects;
 const int maxObjects = 1024;
 extern Gobj objects[maxObjects];
-extern GobjData objData[6];
+extern GobjData objData[7];
 extern Gobj_Func objFuncs[8];
 extern Gobj *playerObj;
 extern Gobj *o;

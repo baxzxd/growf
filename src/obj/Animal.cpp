@@ -12,7 +12,7 @@
 #include "StandardObjs.h"
 #include "Animal.h"
 
-void MoveToAndAttack(Gobj *obj, Gobj *t, float speed, float minDist, float attackDist) {
+int MoveToAndAttack(Gobj *obj, Gobj *t, float speed, float minDist, float attackDist) {
     float targetDist = Obj_SqrDist(obj,t);
     if( targetDist < minDist ) {
         Obj_MoveTo(obj, t, speed);
@@ -20,10 +20,12 @@ void MoveToAndAttack(Gobj *obj, Gobj *t, float speed, float minDist, float attac
             Obj_GiveHealth(t, -1);
             t->vel = t->vel + (t->pos-obj->pos).Norm() * 100;
             t->immunity = .4f;
-            
+            return 2;
             // add timer
         }
+        return 1;
     }
+    return 0;
 }
 int Animal_Update() {
     bool m = false;
@@ -31,8 +33,12 @@ int Animal_Update() {
         Animal_Follower();
     }
     else {
-        if( o->target ) {
-            MoveToAndAttack(o, o->target, 95.0f, 100, 24);
+        if( Obj_GetPointed(o, OBJTARGET) ) {
+            if( !MoveToAndAttack(o, Obj_GetPointed(o, OBJTARGET), 95.0f, 100, 24) ) {
+                if( Obj_TickTimer(o, TIMERTARGET, 1)) {
+                    Obj_SetPointed(o, 0, OBJTARGET);
+                }
+            }
         }
         else
             Animal_Wanderer();
@@ -50,11 +56,14 @@ void Animal_Wanderer() {
             continue;
 
             //just reposition array once per removal getting last element bsaed on count or element before count if at end
-
+        /*
+        check for possible targets
+        check for edible objects and if they have a parent atack it
+        */
         if( o->id != other->id ) {
             if( Obj_HasFlag(other,LIVING) && o->team != other->team ) {
-//                o->target = other;
-
+                Obj_SetPointed(o, other, OBJTARGET);
+                Obj_SetTimer(o, 1, TIMERTARGET);
             }
         }
         else {
@@ -76,11 +85,12 @@ void Animal_Wanderer() {
 }
 void Animal_Follower() {
     // change dist if parent attacking
-    if( o->target ) {
-        MoveToAndAttack(o, o->target, 95.0f, 100, 24);
+    
+    if( Obj_GetPointed(o, OBJTARGET) ) {
+        MoveToAndAttack(o, Obj_GetPointed(o, OBJTARGET), 95.0f, 100, 24);
     }
-    else if( o->parent->target ) {
-        MoveToAndAttack(o, o->parent->target, 95.0f, 100, 24);
+    else if( Obj_GetPointed(o->parent, OBJTARGET) ) {
+        MoveToAndAttack(o, Obj_GetPointed(o->parent, OBJTARGET), 95.0f, 100, 24);
     }
     else if( Obj_SqrDist(o, o->parent) > 60 ) {
         Obj_MoveTo(o,o->parent, 95.0f);

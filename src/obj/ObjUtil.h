@@ -6,7 +6,8 @@
 
 typedef enum {
     TIMERGROWTH = 0,
-    TIMERDECAY = 1
+    TIMERDECAY = 1,
+    TIMERTARGET = 2
 } Gobj_Timers;
 typedef enum {
     OBJPARENT = 0,
@@ -15,7 +16,9 @@ typedef enum {
 
 Gobj *Obj_GetPointed(Gobj *obj, OBJ_POINTERS p);
 Gobj *Obj_SetPointed(Gobj *obj, Gobj *other, OBJ_POINTERS t);
-
+void Obj_SetTimer(Gobj *obj, float v, Gobj_Timers timer);
+bool Obj_TickTimer(Gobj *obj, Gobj_Timers timer);
+bool Obj_TickTimer(Gobj *obj, Gobj_Timers timer, float v);
 Gobj* Obj_Create(int id, V2 pos, float sc);
 Gobj* Obj_Create(int id, V2 pos, V2 vel, float sc);
 V2 Obj_GetSize(Gobj *obj);

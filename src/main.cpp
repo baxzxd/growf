@@ -30,6 +30,7 @@
 
 #include <iostream>
 #include <algorithm>
+#include <time.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include "main.h"
@@ -277,6 +278,8 @@ int main(int argc, char* argv[])
 
     // init
     Render_Init();
+
+    srand(time(NULL));
     Obj_Init();
 
     EnterGameLoop();

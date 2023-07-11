@@ -31,8 +31,9 @@ int Player_Update() {
     float vel = 240;
     o->vel = o->vel + V2{(float)playerDir.x,(float)playerDir.y} * (vel * del); 
     
-    interactRect.x = (int)(playerObj->cPos.x + playerDir.x* 24) - interactRect.w/2;
-    interactRect.y = (int)(playerObj->cPos.y + playerDir.y* 24) - interactRect.h/2;
+    V2 mouseRel = playerObj->cPos + (mousePos - playerObj->cPos).Norm() * 24;
+    interactRect.x = (int)mouseRel.x - interactRect.w/2;
+    interactRect.y = (int)mouseRel.y - interactRect.h/2;
 
     Render_SetDrawColor(Color_RGBToInt(0,125,200),255);
     SDL_RenderDrawRect(renderer,&interactRect);
@@ -64,6 +65,8 @@ int Player_Update() {
             Gobj_Child ch = playerObj->children[i];
             Child_GiveBond(playerObj, i, -ch.bond);
             ch.o->vel = playerAim * 800;
+            ch.o->energy = -50;
+            ch.o->immunity = 0;
         }
     }
     int grabChange = keysJustPressed[SDL_SCANCODE_RIGHT] - keysJustPressed[SDL_SCANCODE_LEFT];
@@ -88,16 +91,28 @@ int Player_Update() {
     }
     
     
+    if( grabSelection != -1 && !playerObj->children[grabSelection].inactive ) {
+        Gobj_Child *ch = &playerObj->children[grabSelection];
+        ch->pos = playerAim * 30.0f;
+    }
     
     lastPlayerDir = playerDir;
     return 0;
 }
 
-Gobj* proj;
 void Player_Use() {
     selObj = Obj_CheckAtMouse();
-    proj = Obj_Create(3,playerObj->pos + playerAim * 24.0f, playerAim * 500.0f, .5f);
-    proj->energy = -50.0f;
+    if( grabSelection != -1 && !playerObj->children[grabSelection].inactive ) {
+        Gobj_Child ch = playerObj->children[grabSelection];
+        
+        // PASS POINTER TO FUNC? DAMN
+        if( ch.o->data->funcs->funcUse ) {
+            ch.o->data->funcs->funcUse(ch.o);
+
+            if( Obj_HasFlag(ch.o, STATIC) )
+                Obj_RemoveChild(playerObj, grabSelection);
+        }
+    }
 }
 void Player_ReleaseUse() {
     Gobj *hovered = Obj_CheckAtMouse();
@@ -105,6 +120,6 @@ void Player_ReleaseUse() {
     if( !selObj || !hovered )
         return;
     
-    selObj->target = hovered;
+    //selObj->target = hovered;
     std::cout<<"outher sel"<<std::endl;
 }

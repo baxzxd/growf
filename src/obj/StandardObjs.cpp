@@ -23,9 +23,14 @@ void Obj_MoveTo(Gobj *objA, Gobj* objB, float v) {
     V2 dir = (c2 - c1).Norm();
     objA->vel = objA->vel + dir * v * del;
 }
+Gobj* proj;
+
 int Weapon_Update() {
-    if( !Obj_HasFlag(o, IN_WORLD) )
-        return 0;
+    return 0;
+}
+int Weapon_Use(Gobj *obj) {
+    proj = Obj_Create(3,playerObj->pos + playerAim * 24.0f, playerAim * 500.0f, .5f);
+    proj->energy = -50.0f;
     return 0;
 }
 
@@ -38,7 +43,7 @@ int Hopper_Update() {
             continue;
         
         float d = Obj_SqrDist(o, &objects[i]);
-        if( d < 160 ) {
+        if( d < 40 ) {
             Obj_MoveTo(&objects[i], o, 140.0f);
             if( d < 12 ) {
                 Obj_GiveHealth(&objects[i], -objects[i].health);
@@ -79,7 +84,11 @@ int Box_Update() {
             
             if( o->energy < 0 ) {
                 Obj_GiveHealth(obj, -1);
+
+                //fix?
                 Obj_Collide(o,obj);
+                o->vel = o->vel * -.2f;
+
                 overlap = true;
             }
             else {
@@ -90,7 +99,8 @@ int Box_Update() {
             }
         }
         if( overlap ) {
-            Obj_GiveHealth(o, -o->health);
+            Obj_GiveHealth(o, -1);
+            o->energy = 0;
         }
     }
 

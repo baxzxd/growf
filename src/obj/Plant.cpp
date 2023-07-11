@@ -13,18 +13,24 @@
 int Plant_Init() {
     //o->timers[0] = 2;
     //o->timers[1] = 1;
-    Obj_SetFlag(o, STATIC, true);
     return 0;
 }
-int Plant_Use() {
-    Obj_SetFlag(o, LIVING, true);
+
+// hoe item to draw surface onto map
+// surface resizes depending on how far stuff is drawn, liquid filling? irrigation idk
+// tile struct that stores if it was dug on or amount of material left?
+
+int Plant_Use(Gobj *obj) {
+    Obj_SetFlag(obj, LIVING, true);
+    Obj_SetFlag(obj, STATIC, true);
+
     return 0;
 }
-int Plant_Death() {
+int Plant_Death(Gobj *obj) {
     for( int i = 0; i < rand()%3; i++ ) {
-        Obj_Create(1,o->pos, RandV2(500),.25f);
+        Obj_Create(1,obj->pos, RandV2(500),.25f);
     }
-    Obj_Create(5, o->pos, 1);
+    Obj_Create(5, obj->pos, 1);
     return 0;
 }
 int Plant_Render() {
@@ -41,10 +47,8 @@ int Plant_Update() {
             if( !Obj_HasFlag(o, LIVING ))
                 break;
             if( tickGrowth ) {
-                o->timers[TIMERGROWTH] += del;
-                if( o->timers[TIMERGROWTH] > 1 ) {
+                if( Obj_TickTimer(o, TIMERGROWTH, 1) ) {
                     o->scale += 1.0f;
-                    o->timers[TIMERGROWTH] = 0;
                 }
             }
             else {

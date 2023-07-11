@@ -1,3 +1,11 @@
+/*
+shadows?
+render map
+put black to light surface
+put lights to light surface
+render light surface
+*/
+
 #include <iostream>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>

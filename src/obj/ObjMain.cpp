@@ -32,6 +32,17 @@ csv templates
     issues
     deaths arent being tracked with parenting still?
 
+
+    randomly generate rocks with speckles and different sizes
+        somehow save speckle locations?
+        finish inventory to store elements in rocks
+
+
+    animals guard power source and try to steal it back
+
+    island like perlin noise and smaller "ore" stone chunks for map
+    also water n such so irrigation can be added
+
 */
 #include <iostream>
 #include <algorithm>
@@ -61,7 +72,11 @@ float RandRange(int w, int d) {
     return ((rand()%(w*2)) - w)/d;
 }
 
-
+void World_ScatterObj(int id, int amount) {
+    for( int i = 0; i < amount; i++ ) {            
+        Gobj *tree = Obj_Create(id, {(float)(rand()%SCREEN_WIDTH),(float)(rand()%SCREEN_HEIGHT)}, 1);
+    }
+}
 void Obj_Init() {
     for( int i = 0; i < maxObjects; i++ ) {
         objects[i].data = &objData[3];
@@ -72,10 +87,10 @@ void Obj_Init() {
     Obj_SetFlag(playerObj, LIVING, true);
 
     Gobj *hopper = Obj_Create(4, {(float)(rand()%SCREEN_WIDTH),(float)(rand()%SCREEN_HEIGHT)}, 1);
-    for( int i = 0; i < 7; i++ ) {            
-        Gobj *tree = Obj_Create(1, {(float)(rand()%SCREEN_WIDTH),(float)(rand()%SCREEN_HEIGHT)}, 1);
-        Obj_SetFlag(tree, LIVING, true);
-    }
+    World_ScatterObj(1, 7);
+    World_ScatterObj(6, 2);
+
+
 }            
 
 // display angled objects as 2 rects?
@@ -252,7 +267,7 @@ void Obj_GiveHealth(Gobj *obj, int h) {
 void Obj_Death(Gobj *obj) {
     std::cout<<obj->data->id<<" died"<<std::endl;
     if( obj->data->funcs->funcDeath )
-        obj->data->funcs->funcDeath();
+        obj->data->funcs->funcDeath(obj);
     Obj_SetFlag(obj, IN_WORLD, false);
     obj->health = -1;
     if( obj->parent ) {
