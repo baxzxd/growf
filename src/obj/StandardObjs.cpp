@@ -76,14 +76,17 @@ int Box_Update() {
             Gobj *obj = c.overlaps[i];
             if(obj == o || o->parent && (obj == o->parent || obj->parent == o->parent )  )
                 continue;
-            std::cout<<o<<"collide with"<<obj<<std::endl;
-            overlap = true;
+            
             if( o->energy < 0 ) {
                 Obj_GiveHealth(obj, -1);
                 Obj_Collide(o,obj);
+                overlap = true;
             }
             else {
-                Obj_GiveHealth(obj, 1);
+                if( o->energy > 25 ) {
+                    o->energy -= 25;
+                    Obj_GiveHealth(obj, 1);
+                }
             }
         }
         if( overlap ) {

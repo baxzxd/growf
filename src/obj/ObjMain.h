@@ -6,6 +6,8 @@ struct Gobj_Func {
     int (*funcInit)();
     int (*funcRender)();
     int (*funcUpdate)();
+    int (*funcUse)();
+    int (*funcDeath)();
 };
 /// id, health, w, h, scale, color, update
 
@@ -39,7 +41,9 @@ struct Gobj_Child {
     int bond;
     V2 pos;
     bool inactive = true;
+    bool visible = true;
 };
+const int OBJ_POINTER_AMOUNT = 8;
 const int CHILD_COUNT = 8;
 struct Gobj {
     int id;
@@ -68,7 +72,7 @@ struct Gobj {
     Gobj *parent;
     Gobj *target;
 
-    Gobj *pointers[8];
+    Gobj *pointers[OBJ_POINTER_AMOUNT];
     int referencesTo = 0;
 
     GobjData *data;
@@ -89,12 +93,22 @@ typedef enum {
     BR
 } ENUMOVERLAP;
 
+struct Inventory {
+    int slots[8];
+};
+//void Inventory_Breakdown(Inventory *inv, int slot);
+//void Inventory_Add(Inventory *inv, Gobj *obj, int amount = 1, int slot = -1);
+//void Inventory_Add(Inventory *inv, int id, int amount = 1, int slot = -1);
+//void Inventory_Remove(Inventory *inv, int slot);
+//void Inventory_TransferToChild(Inventory *inv, int slot);
+//void Inventory_AddChild(Inventory *inv, int slot);
+
 struct ObjController {};
 
 extern int totalObjects;
 const int maxObjects = 1024;
 extern Gobj objects[maxObjects];
-extern GobjData objData[5];
+extern GobjData objData[6];
 extern Gobj_Func objFuncs[8];
 extern Gobj *playerObj;
 extern Gobj *o;
@@ -107,7 +121,7 @@ void Obj_Death(Gobj *obj);
 void Obj_GiveHealth(Gobj *obj, int h);
 void Obj_GetGlobalCenter(Gobj *obj, V2 *outPos);
 void Obj_MoveTo(Gobj *objA, Gobj *objB, float f);
-
+void Child_GiveBond(Gobj *obj, int child, int b);
 /// checks if selObj needs updated, or for obj interactions
 Gobj* Obj_CheckAtMouse();
 #endif

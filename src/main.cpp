@@ -43,6 +43,7 @@ using namespace std;
 
 
 int keys[256];
+int keysJustPressed[256];
 int gameState = 0;
 //Gobj* objGrid[13][128];
 /// cellX,cellY are output
@@ -91,7 +92,7 @@ V2 GetMousePos() {
     SDL_GetMouseState(&mouseX,&mouseY);
     return {(float)mouseX, (float)mouseY};
 }
-
+V2 playerAim;
 void EnterGameLoop() {
 
     // Event loop exit flag
@@ -129,7 +130,11 @@ void EnterGameLoop() {
             mousePos = GetMousePos();
         }
 
-    
+        // fire projectile
+        V2 d = mousePos - playerObj->pos;
+        playerAim = d.Norm();
+
+
         switch(e.type) {
             // User requests quit
             case SDL_QUIT:
@@ -243,7 +248,7 @@ void EnterGameLoop() {
         }
 
         // Initialize renderer color white for the background
-        Render_SetDrawColor(Color_RGBToInt(0x13,0,0),0xff);
+        Render_SetDrawColor(Color_RGBToInt(37,143,18),0xff);
 
         // Clear screen
         SDL_RenderClear(renderer);
@@ -257,6 +262,8 @@ void EnterGameLoop() {
         //Render_String("393ffff93999",pos);
         // Update screen
         SDL_RenderPresent(renderer);
+
+        memset(keysJustPressed, 0, sizeof(keysJustPressed));
     }
 }
 int main(int argc, char* argv[])

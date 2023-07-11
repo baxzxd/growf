@@ -17,7 +17,8 @@ void Obj_GetUsableDistance(Gobj *obj){
 
     allow children to float freely in parent for containers
 */
-void Obj_AddChild(Gobj *obj, Gobj *child, int bond, V2 pos) {
+
+void Obj_AddChild(Gobj *obj, Gobj *child, int bond, V2 pos, bool visible) {
     if( child->parent || obj->childCount == 8 )
         return;
 
@@ -35,6 +36,8 @@ void Obj_AddChild(Gobj *obj, Gobj *child, int bond, V2 pos) {
     ch->bond = bond;
     ch->pos = pos;
     ch->inactive = false;
+    ch->visible = visible;
+
     child->held = true;
     child->parent = obj;
     obj->childCount += 1;
@@ -43,6 +46,7 @@ void Obj_RemoveChild(Gobj *obj, int c) {
     Gobj *child = obj->children[c].o;
     child->immunity = .8f;
     child->held = false;
+    child->parent = 0;
     obj->children[c].inactive = true;   
     obj->childCount -= 1;
 }
@@ -113,7 +117,7 @@ Gobj* Obj_Create(int id, V2 pos, float sc) {
     //find empty object
     int emptyIndex = -1;
     for( int i = 0; i < maxObjects; i++ ) {
-        if( objects[i].health == -1 && !objects[i].reserved ) {
+        if( objects[i].health == -1 && !objects[i].referencesTo ) {
             emptyIndex = i;
             break;
         }
@@ -128,7 +132,7 @@ Gobj* Obj_Create(int id, V2 pos, float sc) {
     obj->pos = pos;
     obj->scale = sc;
     obj->health = obj->data->maxHealth;
-
+    obj->immunity = 0;
 
     obj->timers[0] = 2;
     obj->timers[1] = 2;

@@ -97,9 +97,12 @@ struct V2Int {
 
 V2 RandV2(int r);
 // input
+const int TOTAL_KEYS = 256;
 extern int keys[256];
+extern int keysJustPressed[256];
 extern float joystickAxes[6];
 extern V2 playerDir;
+extern V2 playerAim;
 extern V2 lastPlayerDir;
 
 extern V2 d, dNorm,mousePos;

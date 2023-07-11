@@ -73,7 +73,8 @@ void Obj_Init() {
 
     Gobj *hopper = Obj_Create(4, {(float)(rand()%SCREEN_WIDTH),(float)(rand()%SCREEN_HEIGHT)}, 1);
     for( int i = 0; i < 7; i++ ) {            
-        Obj_Create(1, {(float)(rand()%SCREEN_WIDTH),(float)(rand()%SCREEN_HEIGHT)}, 1);
+        Gobj *tree = Obj_Create(1, {(float)(rand()%SCREEN_WIDTH),(float)(rand()%SCREEN_HEIGHT)}, 1);
+        Obj_SetFlag(tree, LIVING, true);
     }
 }            
 
@@ -112,7 +113,7 @@ void Obj_Render(Gobj *obj) {
     SDL_RenderFillRect(renderer, &squareRect);
 }     
 
-
+//(OBJNAME)_ChildTick function?
 void Tick(Gobj *obj) {
     o = obj;
     oData = o->data;
@@ -124,6 +125,11 @@ void Tick(Gobj *obj) {
             o->data->funcs->funcInit();
         Obj_SetFlag(o,JUST_CREATED, false);
         return;
+    }
+
+    for( int i = 0; i < OBJ_POINTER_AMOUNT; i++ ) {
+        if( o->pointers[i] && o->pointers[i]->health == -1 )
+            o->pointers[i] = 0;
     }
 
     Obj_Physics(del);
@@ -151,7 +157,8 @@ void Tick(Gobj *obj) {
                 if( o->children[i].inactive )
                     continue;
                 o->children[i].o->pos = o->pos + o->children[i].pos;
-                Obj_Render(o->children[i].o);
+                if( o->children[i].visible )
+                    Obj_Render(o->children[i].o);
             }
         }
     }
@@ -223,16 +230,19 @@ void Obj_Decay(Gobj *obj) {
         obj->timers[2] = obj->timers[3];
     }
 }
+void Child_GiveBond(Gobj *obj, int child, int b) {
+    obj->children[child].bond += b;
+    if( obj->children[child].bond <= 0 ) {
+        Obj_RemoveChild(obj, child);
+    }
+}
 void Obj_GiveHealth(Gobj *obj, int h) {
     obj->health += h;
     if( h < 0 ) {
         for( int i = 0; i < CHILD_COUNT; i++ ) {
             if( obj->children[i].inactive )
                 continue;
-            obj->children[i].bond -= 50;
-            if( obj->children[i].bond <= 0 ) {
-                Obj_RemoveChild(obj, i);
-            }
+            Child_GiveBond(obj, i, -50);
         }
     }
     if( obj->health <= 0 ) {
@@ -241,6 +251,8 @@ void Obj_GiveHealth(Gobj *obj, int h) {
 }
 void Obj_Death(Gobj *obj) {
     std::cout<<obj->data->id<<" died"<<std::endl;
+    if( obj->data->funcs->funcDeath )
+        obj->data->funcs->funcDeath();
     Obj_SetFlag(obj, IN_WORLD, false);
     obj->health = -1;
     if( obj->parent ) {

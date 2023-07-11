@@ -23,7 +23,7 @@ void Friction(V2 *v) {
 void Obj_GetOverlaps(SDL_Rect *rect, CollInfo *c) {
     c->overlap = 0;
     for( int i = 0; i < maxObjects; i++ ) {
-       if( doOverlap(rect, &objects[i]) ){
+       if( Obj_HasFlag(&objects[i], IN_WORLD) && doOverlap(rect, &objects[i]) ){
             //Obj_Collide(o, &objects[i]);
             c->overlaps[c->overlap] = &objects[i];
             c->overlap += 1;
@@ -34,7 +34,7 @@ void Obj_GetOverlaps(Gobj *obj, CollInfo *c) {
     c->overlap = 0;
     for( int i = 0; i < maxObjects; i++ ) {
         if(&objects[i] == obj || !Obj_HasFlag(&objects[i], IN_WORLD) || 
-            Obj_HasFlag(&objects[i], NO_COLLISION) || (obj->immunity > 0 || objects[i].immunity > 0) )
+            Obj_HasFlag(&objects[i], NO_COLLISION) || (objects[i].immunity > 0) )
             continue;
         if( doOverlap(obj, &objects[i]) ){
             //Obj_Collide(o, &objects[i]);

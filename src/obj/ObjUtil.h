@@ -22,7 +22,7 @@ V2 Obj_GetSize(Gobj *obj);
 bool  Obj_HasFlag(Gobj *o, Gobj_Flags flag);
 void Obj_SetFlag(Gobj *o, Gobj_Flags flag, bool s);
 float Obj_SqrDist(Gobj *objA, Gobj *objB);
-void Obj_AddChild(Gobj *obj, Gobj *child, int bond, V2 pos);
+void Obj_AddChild(Gobj *obj, Gobj *child, int bond, V2 pos, bool visible);
 void Obj_RemoveChild(Gobj *obj, int i);
 void Obj_CheckChild(Gobj *obj, Gobj *child);
 SDL_Rect *Obj_GetRect(Gobj *obj, SDL_Rect *r);

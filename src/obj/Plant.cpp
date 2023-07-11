@@ -17,6 +17,17 @@ int Plant_Init() {
     return 0;
 }
 int Plant_Use() {
+    Obj_SetFlag(o, LIVING, true);
+    return 0;
+}
+int Plant_Death() {
+    for( int i = 0; i < rand()%3; i++ ) {
+        Obj_Create(1,o->pos, RandV2(500),.25f);
+    }
+    Obj_Create(5, o->pos, 1);
+    return 0;
+}
+int Plant_Render() {
     return 0;
 }
 int Plant_Update() {
@@ -27,6 +38,8 @@ int Plant_Update() {
     switch( o->state ) {
         // growing
         case 0:
+            if( !Obj_HasFlag(o, LIVING ))
+                break;
             if( tickGrowth ) {
                 o->timers[TIMERGROWTH] += del;
                 if( o->timers[TIMERGROWTH] > 1 ) {
@@ -59,7 +72,7 @@ int Plant_Update() {
                     fruit->immunity = .6f;
                     // green to orange
                     //Obj_SetGrowGradient( Color_RGBToInt(0, 165, 0), Color_RGBToInt(255, 165, 0));
-                    Obj_AddChild(o, fruit, 100, supPos);
+                    Obj_AddChild(o, fruit, 100, supPos, true);
                     //Obj_SetFlag(fruit, LIVING, true);
                 }
             }
