@@ -82,6 +82,10 @@ Uint64 tick = 0;
 V2 d, dNorm,mousePos;
 float len;
 float joystickAxes[6];
+
+int joyPressed[22];
+int joyJustPressed[22];
+
 V2 controllerCursorPos;
 V2 controllerSmartCursorPos;
 V2 joyV;
@@ -94,6 +98,14 @@ V2 GetMousePos() {
     return {(float)mouseX, (float)mouseY};
 }
 V2 playerAim;
+
+SDL_Rect mouseR;
+void UpdateMouseRect() {
+    mouseR.x = mousePos.x;
+    mouseR.y = mousePos.y;
+    mouseR.w = 4;
+    mouseR.h = 4;
+}
 void EnterGameLoop() {
 
     // Event loop exit flag
@@ -130,6 +142,7 @@ void EnterGameLoop() {
         else {
             mousePos = GetMousePos();
         }
+        UpdateMouseRect();
 
         // fire projectile
         V2 d = mousePos - playerObj->pos;
@@ -216,7 +229,11 @@ void EnterGameLoop() {
             
                 joystickID = e.cbutton.which;
                 button = (SDL_GameControllerButton)e.cbutton.button;
+                std::cout<<button<<std::endl;
                 isPressed = e.cbutton.state == SDL_PRESSED;
+                joyPressed[button] = isPressed;
+                if( isPressed )
+                    joyJustPressed[button] = 1;
                 // TODO
             
             break;
@@ -265,6 +282,7 @@ void EnterGameLoop() {
         SDL_RenderPresent(renderer);
 
         memset(keysJustPressed, 0, sizeof(keysJustPressed));
+        memset(joyJustPressed, 0, sizeof(joyJustPressed));
     }
 }
 int main(int argc, char* argv[])

@@ -18,18 +18,22 @@ void Obj_GetUsableDistance(Gobj *obj){
     allow children to float freely in parent for containers
 */
 
-void Obj_AddChild(Gobj *obj, Gobj *child, int bond, V2 pos, bool visible) {
-    if( child->parent || obj->childCount == 8 )
-        return;
-
+bool Obj_AddChild(Gobj *obj, Gobj *child, int bond, V2 pos, bool visible) {
+    if( obj->childCount == 8 )
+        return false;
+    if( child->parent ) {
+        Obj_RemoveChild(child->parent, child);
+    }
     
     int emptyIndex = -1;
     for( int i = 0; i < CHILD_COUNT; i++ ) {
         if( obj->children[i].inactive )
             emptyIndex = i;
     }
+
+    // probably not needed if childcount is a thing
     if( emptyIndex == -1 )
-        return;
+        return false;
 
     Gobj_Child *ch = &obj->children[emptyIndex];
     ch->o = child;
@@ -41,6 +45,7 @@ void Obj_AddChild(Gobj *obj, Gobj *child, int bond, V2 pos, bool visible) {
     child->held = true;
     child->parent = obj;
     obj->childCount += 1;
+    return true;
 }
 void Obj_RemoveChild(Gobj *obj, int c) {
     Gobj *child = obj->children[c].o;
@@ -49,6 +54,14 @@ void Obj_RemoveChild(Gobj *obj, int c) {
     child->parent = 0;
     obj->children[c].inactive = true;   
     obj->childCount -= 1;
+}
+void Obj_RemoveChild(Gobj *obj, Gobj *child) {
+    for( int i = 0; i < CHILD_COUNT; i++ ) {
+        if( !obj->children[i].inactive && obj->children[i].o == child ) {
+            return Obj_RemoveChild(obj, i);
+            return;
+        }
+    }
 }
 void Obj_CheckChild(Gobj *obj, Gobj *child) {
     for( int i = 0; i < CHILD_COUNT; i++ ) {
@@ -86,11 +99,6 @@ SDL_Rect* Obj_GetRect(Gobj *obj, SDL_Rect *r) {
 }
 Gobj* Obj_CheckAtMouse() {
     // mayb move to mousePos
-    SDL_Rect mouseR;
-    mouseR.x = mousePos.x;
-    mouseR.y = mousePos.y;
-    mouseR.w = 4;
-    mouseR.h = 4;
 
     for( int i = 0; i < maxObjects; i++ ) {
         if( !Obj_HasFlag(&objects[i], IN_WORLD) || selObj == &objects[i] )
@@ -98,7 +106,6 @@ Gobj* Obj_CheckAtMouse() {
         V2 d = (mousePos - objects[i].pos);
         float l = d.Len();
         if( l < 16 ) {
-            std::cout<<"obj sel"<<std::endl;
             return &objects[i];
         }
     }

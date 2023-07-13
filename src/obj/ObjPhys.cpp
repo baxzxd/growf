@@ -34,7 +34,7 @@ void Obj_GetOverlaps(Gobj *obj, CollInfo *c) {
     c->overlap = 0;
     for( int i = 0; i < maxObjects; i++ ) {
         if(&objects[i] == obj || !Obj_HasFlag(&objects[i], IN_WORLD) || 
-            Obj_HasFlag(&objects[i], NO_COLLISION) || (objects[i].immunity > 0) )
+            Obj_HasFlag(&objects[i], NO_COLLISION)  )
             continue;
         if( doOverlap(obj, &objects[i]) ){
             //Obj_Collide(o, &objects[i]);

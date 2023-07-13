@@ -11,8 +11,7 @@
 #include "StandardObjs.h"
 
 int Plant_Init() {
-    //o->timers[0] = 2;
-    //o->timers[1] = 1;
+    Obj_SetTimer(o, 1, TIMERGROWTH);
     return 0;
 }
 
@@ -58,6 +57,7 @@ int Plant_Update() {
             if( o->scale >= 10.0f ) {
                 std::cout << "plant done grew" << std::endl;
                 o->state = 1;
+                Obj_SetTimer(o, 1, TIMERGROWTH);
             }
         break;
 
@@ -65,9 +65,7 @@ int Plant_Update() {
         case 1:
             if( o->childCount == 5 )
                 break;
-            o->timers[0] -= del;
-            if( o->timers[TIMERGROWTH] <= 0 ) {
-                o->timers[TIMERGROWTH] = o->timers[TIMERGROWTH+1];
+            if( Obj_TickTimer(o, TIMERGROWTH, 1) ) {
                 //create fruit
                 V2 supPos = {(float)(rand()%(int)(Obj_GetSize(o).x)),(float)(rand()%((int)Obj_GetSize(o).y))};
                 Gobj* fruit = Obj_Create(3, o->pos,RandV2(100), 1);

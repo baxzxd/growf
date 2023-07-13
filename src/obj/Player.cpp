@@ -19,6 +19,26 @@ int breakCount;
 // grab all objects in interact rect and cycle through them
 // only allow certain number of objects to allow throwing as projectiles
 // fuse everything together?
+//default to -1 each grab? 
+    //while loop for dumb array gaps
+void Player_ChangeGrabbed( int change ) {
+    if( !change )
+        return;
+    breakCount = -1;
+    while(true) {
+        breakCount += 1;
+        if( breakCount == CHILD_COUNT )
+            break;
+        grabSelection = (grabSelection + change)%CHILD_COUNT;
+        if( grabSelection < 0 )
+            grabSelection = CHILD_COUNT - 1;
+        if( playerObj->children[grabSelection].inactive)
+            continue;
+        selObj = playerObj->children[grabSelection].o;
+        break;
+    }
+}
+    
 int Player_Update() {
     V2 joyAxes = {joystickAxes[0], joystickAxes[1] };
     if( abs(joyAxes.x) < .05f )
@@ -44,9 +64,9 @@ int Player_Update() {
     hold to choose and use?
     double tap to drop?
     */
-    if( keys[SDL_SCANCODE_G] ) {
+    if( keys[SDL_SCANCODE_G] || joyPressed[SDL_CONTROLLER_BUTTON_B] ) {
         //try grba
-        if( keysJustPressed[SDL_SCANCODE_G] ) {
+        if( keysJustPressed[SDL_SCANCODE_G] || joyJustPressed[SDL_CONTROLLER_BUTTON_B]) {
             CollInfo coll;
             Obj_GetOverlaps(&interactRect, &coll);
             for( int i = 0; i < coll.overlap; i++ ) {
@@ -69,27 +89,9 @@ int Player_Update() {
             ch.o->immunity = 0;
         }
     }
-    int grabChange = keysJustPressed[SDL_SCANCODE_RIGHT] - keysJustPressed[SDL_SCANCODE_LEFT];
-    
-    if( grabChange ) {
-
-    //default to -1 each grab? 
-        //while loop for dumb array gaps
-        breakCount = -1;
-        while(true) {
-            breakCount += 1;
-            if( breakCount == CHILD_COUNT )
-                break;
-            grabSelection = (grabSelection + grabChange)%CHILD_COUNT;
-            if( grabSelection < 0 )
-                grabSelection = CHILD_COUNT - 1;
-            if( playerObj->children[grabSelection].inactive)
-                continue;
-            selObj = playerObj->children[grabSelection].o;
-            break;
-        }
-    }
-    
+    int grabChange = (keysJustPressed[SDL_SCANCODE_RIGHT] - keysJustPressed[SDL_SCANCODE_LEFT]) +
+                     (joyJustPressed[SDL_CONTROLLER_BUTTON_RIGHTSHOULDER]-joyJustPressed[SDL_CONTROLLER_BUTTON_LEFTSHOULDER]);
+    Player_ChangeGrabbed(grabChange);
     
     if( grabSelection != -1 && !playerObj->children[grabSelection].inactive ) {
         Gobj_Child *ch = &playerObj->children[grabSelection];
@@ -112,6 +114,9 @@ void Player_Use() {
             if( Obj_HasFlag(ch.o, STATIC) )
                 Obj_RemoveChild(playerObj, grabSelection);
         }
+    }
+    else {
+        Weapon_Use(playerObj);
     }
 }
 void Player_ReleaseUse() {

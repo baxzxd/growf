@@ -30,6 +30,7 @@ int Box_Update();
 int Hopper_Update();
 
 int Weapon_Use(Gobj *obj);
+int Nail_Use(Gobj *obj);
 
 int Hopper_Render();
 #endif

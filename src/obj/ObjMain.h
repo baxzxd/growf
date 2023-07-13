@@ -109,7 +109,7 @@ struct ObjController {};
 extern int totalObjects;
 const int maxObjects = 1024;
 extern Gobj objects[maxObjects];
-extern GobjData objData[7];
+extern GobjData objData[8];
 extern Gobj_Func objFuncs[8];
 extern Gobj *playerObj;
 extern Gobj *o;

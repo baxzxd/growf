@@ -89,6 +89,7 @@ void Obj_Init() {
     Gobj *hopper = Obj_Create(4, {(float)(rand()%SCREEN_WIDTH),(float)(rand()%SCREEN_HEIGHT)}, 1);
     World_ScatterObj(1, 7);
     World_ScatterObj(6, 2);
+    World_ScatterObj(7, 5);
 
 
 }            
@@ -236,7 +237,6 @@ void Obj_Collide(Gobj *obj, Gobj *collObj) {
     float mass = size.x * size.y; // scale mass mayb idk its not that strong
     float collMass = collSize.x * collSize.y;
     collObj->vel = o->vel - (o->vel * mass) / collMass;
-    std::cout<<"m:"<<mass<<"collMass:"<<collMass<<std::endl;
 }
 void Obj_Decay(Gobj *obj) {
     obj->timers[2] -= del;
@@ -252,6 +252,9 @@ void Child_GiveBond(Gobj *obj, int child, int b) {
     }
 }
 void Obj_GiveHealth(Gobj *obj, int h) {
+    if( h < 0 && obj->immunity ) 
+        return;
+        painted world with fill material tool
     obj->health += h;
     if( h < 0 ) {
         for( int i = 0; i < CHILD_COUNT; i++ ) {

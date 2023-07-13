@@ -100,10 +100,13 @@ V2 RandV2(int r);
 const int TOTAL_KEYS = 256;
 extern int keys[256];
 extern int keysJustPressed[256];
+extern int joyPressed[22];
+extern int joyJustPressed[22];
 extern float joystickAxes[6];
 extern V2 playerDir;
 extern V2 playerAim;
 extern V2 lastPlayerDir;
+extern SDL_Rect mouseR;
 
 extern V2 d, dNorm,mousePos;
 extern float len;

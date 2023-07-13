@@ -99,7 +99,7 @@ int Box_Update() {
             }
         }
         if( overlap ) {
-            Obj_GiveHealth(o, -1);
+            Obj_GiveHealth(o, -o->health);
             o->energy = 0;
         }
     }
