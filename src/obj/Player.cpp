@@ -3,6 +3,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include "../main.h"
+#include "../joystick.h"
 #include "../color.h"
 #include "../render.h"
 #include "ObjMain.h"
@@ -12,6 +13,8 @@
 
 V2 playerDir;
 SDL_Rect interactRect = {0,0,32,32};
+SDL_Rect interactRectVisual = {0,0,32,32};
+
 V2 lastPlayerDir;
 int controls[32];
 int grabSelection = 0;
@@ -21,6 +24,14 @@ int breakCount;
 // fuse everything together?
 //default to -1 each grab? 
     //while loop for dumb array gaps
+
+int Player_Death(Gobj *obj) {
+    Game_Reset();
+    return 0;
+}
+
+//press c to start combine with red outline and action or something to cancel?
+//generalize this?
 void Player_ChangeGrabbed( int change ) {
     if( !change )
         return;
@@ -34,11 +45,13 @@ void Player_ChangeGrabbed( int change ) {
             grabSelection = CHILD_COUNT - 1;
         if( playerObj->children[grabSelection].inactive)
             continue;
-        selObj = playerObj->children[grabSelection].o;
+        //selObj = playerObj->children[grabSelection].o;
         break;
     }
 }
-    
+bool Player_HasGrab() {
+    return grabSelection != -1 && !playerObj->children[grabSelection].inactive;
+}
 int Player_Update() {
     V2 joyAxes = {joystickAxes[0], joystickAxes[1] };
     if( abs(joyAxes.x) < .05f )
@@ -51,12 +64,16 @@ int Player_Update() {
     float vel = 240;
     o->vel = o->vel + V2{(float)playerDir.x,(float)playerDir.y} * (vel * del); 
     
-    V2 mouseRel = playerObj->cPos + (mousePos - playerObj->cPos).Norm() * 24;
+    V2 playerCam = Obj_GetCameraCenter(playerObj);
+    V2 mouseRel = playerCam + (((mousePos) - playerCam).Norm() * 24);
+    V2 mouseRelCam = playerCam + (((mousePos-cameraPos) - playerCam).Norm() * 24);
     interactRect.x = (int)mouseRel.x - interactRect.w/2;
     interactRect.y = (int)mouseRel.y - interactRect.h/2;
+    interactRectVisual.x = (int)mouseRelCam.x - interactRect.w/2;
+    interactRectVisual.y = (int)mouseRelCam.y - interactRect.h/2;
 
     Render_SetDrawColor(Color_RGBToInt(0,125,200),255);
-    SDL_RenderDrawRect(renderer,&interactRect);
+    SDL_RenderDrawRect(renderer,&interactRectVisual);
     
     /*
     grabbing
@@ -77,33 +94,48 @@ int Player_Update() {
             grabSelection = 0;
         }
     }
+    if( keysJustPressed[SDL_SCANCODE_R] ) {
+        if( Player_HasGrab() ) {
+            Obj_Rotate(playerObj->children[grabSelection].o, 90);
+        }
+    }
+    bool hardThrow = false;
     if( keysJustPressed[SDL_SCANCODE_T] ) {
-        for( int i = 0; i < CHILD_COUNT; i++ ) {
-            if( playerObj->children[i].inactive )
-                continue;
-            
-            Gobj_Child ch = playerObj->children[i];
-            Child_GiveBond(playerObj, i, -ch.bond);
-            ch.o->vel = playerAim * 800;
-            ch.o->energy = -50;
-            ch.o->immunity = 0;
+        if( hardThrow ) {
+            for( int i = 0; i < CHILD_COUNT; i++ ) {
+                if( playerObj->children[i].inactive )
+                    continue;
+
+                Obj_ThrowChild( playerObj, i, playerAim );
+                
+            }
+        } 
+        else {
+            Obj_ThrowChild( playerObj, grabSelection, playerAim );
         }
     }
     int grabChange = (keysJustPressed[SDL_SCANCODE_RIGHT] - keysJustPressed[SDL_SCANCODE_LEFT]) +
                      (joyJustPressed[SDL_CONTROLLER_BUTTON_RIGHTSHOULDER]-joyJustPressed[SDL_CONTROLLER_BUTTON_LEFTSHOULDER]);
     Player_ChangeGrabbed(grabChange);
     
-    if( grabSelection != -1 && !playerObj->children[grabSelection].inactive ) {
+    if( Player_HasGrab() ) {
         Gobj_Child *ch = &playerObj->children[grabSelection];
         ch->pos = playerAim * 30.0f;
     }
     
     lastPlayerDir = playerDir;
+
+    if( o->pos.x > SCREEN_WIDTH/2 ) {
+        cameraPos.x =  SCREEN_WIDTH/2 - o->pos.x;
+    }
+    if( o->pos.y > SCREEN_WIDTH/2 ) {
+        cameraPos.y = SCREEN_HEIGHT/2 - o->pos.y;
+    }
     return 0;
 }
 
 void Player_Use() {
-    selObj = Obj_CheckAtMouse();
+    //selObj = Obj_CheckAtMouse();
     if( grabSelection != -1 && !playerObj->children[grabSelection].inactive ) {
         Gobj_Child ch = playerObj->children[grabSelection];
         
@@ -122,8 +154,8 @@ void Player_Use() {
 void Player_ReleaseUse() {
     Gobj *hovered = Obj_CheckAtMouse();
 
-    if( !selObj || !hovered )
-        return;
+    //if( !selObj || !hovered )
+    //    return;
     
     //selObj->target = hovered;
     std::cout<<"outher sel"<<std::endl;

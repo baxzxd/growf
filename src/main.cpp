@@ -34,14 +34,23 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include "main.h"
+#include "joystick.h"
 #include "render.h"
 #include "color.h"
 #include "input.h"
+#include "world/world.h"
 #include "obj/ObjMain.h"
+#include "obj/ObjData.h"
+#include "obj/ObjUtil.h"
 #include "obj/StandardObjs.h"
 #include "audio.h"
 using namespace std;
 
+
+
+
+
+// combine obj header files?
 
 int keys[256];
 int keysJustPressed[256];
@@ -51,29 +60,10 @@ int gameState = 0;
 V2 RandV2(int r) {
     return {(float)((rand()%(r*2))-r),(float)((rand()%(r*2))-r)};
 }
-void Joystick_Init() {
-    // set flags n such
-    SDL_SetHint(SDL_HINT_GAMECONTROLLER_USE_BUTTON_LABELS, "0");
-    SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
-    SDL_Init(SDL_INIT_GAMECONTROLLER);
-    SDL_SetHint(SDL_HINT_JOYSTICK_THREAD, "1");
-
-    // find controllers
-    int numGamepads = 0;
-    SDL_GameController* gamepadId[12] = { nullptr };
-    for (int i = 0; i < SDL_NumJoysticks(); i++) {
-        if (!SDL_IsGameController(i)) {
-            continue;
-        }
-        SDL_GameController* g = SDL_GameControllerOpen(i);
-        gamepadId[numGamepads++] = g;
-    }
-    std::cout<<"FOUND "<< sizeof(Animal_Data) << "GAMEPADS";
-}
 void GetObjCell(Gobj* obj, int *cellX, int *cellY) {
     // get furthest corners and divide by cell size
 }
-void Game_RegenWorld() {
+void Game_Reset() {
     
 }
 float del = 0;
@@ -81,16 +71,9 @@ Uint64 lastTick = 0;
 Uint64 tick = 0;
 V2 d, dNorm,mousePos;
 float len;
-float joystickAxes[6];
 
-int joyPressed[22];
-int joyJustPressed[22];
-
-V2 controllerCursorPos;
-V2 controllerSmartCursorPos;
-V2 joyV;
-int triggerHeld[2];
 bool usingJoystick = false;
+
 int mouseX, mouseY;
 V2 GetMousePos() {
     int mouseX,mouseY;
@@ -98,7 +81,6 @@ V2 GetMousePos() {
     return {(float)mouseX, (float)mouseY};
 }
 V2 playerAim;
-
 SDL_Rect mouseR;
 void UpdateMouseRect() {
     mouseR.x = mousePos.x;
@@ -106,12 +88,14 @@ void UpdateMouseRect() {
     mouseR.w = 4;
     mouseR.h = 4;
 }
-void EnterGameLoop() {
 
+//remove direct access to joypressed and keypressed and add actions with bindings
+
+V2 cameraPos;
+void EnterGameLoop() {
     // Event loop exit flag
     bool quit = false;
     int speed = 1;
-
     
     // Event loop
     while(!quit) {
@@ -125,23 +109,18 @@ void EnterGameLoop() {
         tick = SDL_GetPerformanceCounter();
         del = (float)((tick - lastTick)) / (float)(SDL_GetPerformanceFrequency());
 
-        // joystick
-        CONTROLLERSTICK stick;
-        SDL_JoystickID joystickID;
-        SDL_GameControllerButton button;
-        SDL_GameControllerAxis axis;
-        SDL_GameController* gameController;
-        SDL_Joystick* joystick;
-        float value;
-        bool isPressed = false;
-        int joystickIndex = 0;
         
+        //
+
+
+        //check window collision then world collision on click
         if( usingJoystick ) {
             mousePos = playerObj->pos + controllerCursorPos;
         }
         else {
             mousePos = GetMousePos();
         }
+        mousePos = mousePos + cameraPos;
         UpdateMouseRect();
 
         // fire projectile
@@ -178,64 +157,30 @@ void EnterGameLoop() {
                 usingJoystick = false;
 
                 if( e.key.keysym.sym == SDLK_ESCAPE ) {
-                    Game_RegenWorld();
+                    Game_Reset();
                 }
                 ProcessKey(&e.key);
             break;
 
             case SDL_CONTROLLERDEVICEADDED:
                 usingJoystick = true;
-            
-                joystickIndex = e.cdevice.which;
-                gameController = SDL_GameControllerOpen(joystickIndex);
-                joystick = SDL_GameControllerGetJoystick(gameController);
-                 joystickID = SDL_JoystickInstanceID(joystick);
-                // TODO
-            
+                Joystick_Added(&e);
             break;
             case SDL_CONTROLLERDEVICEREMOVED:
                 usingJoystick = true;
-            
-                joystickID = e.cdevice.which;
-                // TODO
-            
+                Joystick_Removed(&e);
             break;
             case SDL_CONTROLLERAXISMOTION:
+
                 usingJoystick = true;
-            
-                joystickID = e.caxis.which;
+                Joystick_AxisMotion(&e);
+                    
                 
-                axis = (SDL_GameControllerAxis)e.caxis.axis;
-                value = (float)e.caxis.value / (float)SDL_JOYSTICK_AXIS_MAX;
-                joystickAxes[axis] = value;
-                switch( axis ) {
-                    case 0:
-                    case 1:
-                        stick = LEFTSTICK;
-                    break;
-
-                    case 2:
-                    case 3:
-                        stick = RIGHTSTICK;
-                    break;
-                }
-
-                //cursor modes, terraria console style but trigger toggles "smart cursor" for aiming
-                //deadzones here?
             break;
             case SDL_CONTROLLERBUTTONDOWN:
             case SDL_CONTROLLERBUTTONUP:
                 usingJoystick = true;
-            
-                joystickID = e.cbutton.which;
-                button = (SDL_GameControllerButton)e.cbutton.button;
-                std::cout<<button<<std::endl;
-                isPressed = e.cbutton.state == SDL_PRESSED;
-                joyPressed[button] = isPressed;
-                if( isPressed )
-                    joyJustPressed[button] = 1;
-                // TODO
-            
+                Joystick_Button(&e);
             break;
 	
         }
@@ -244,26 +189,6 @@ void EnterGameLoop() {
         // move actions outside of switch and use bools for action pressed
 
 
-
-        joyV = {joystickAxes[2],joystickAxes[3]};
-        //controllerCursorPos = controllerCursorPos + joyV * 120.0f * del;
-        controllerCursorPos = joyV * 120.0f;
-
-        SDL_Rect controllerCursorRect;
-        controllerCursorRect.x = (int)playerObj->pos.x + (int)controllerCursorPos.x - 8;
-        controllerCursorRect.y = (int)playerObj->pos.y + (int)controllerCursorPos.y - 8;
-        controllerCursorRect.w = 16;
-        controllerCursorRect.h = 16;
-        
-        // one click per joystick pull since its analog
-        if( triggerHeld[0] ) {
-            if( joystickAxes[4] < .5f )
-                triggerHeld[0] = 0;
-        }
-        else if( joystickAxes[4] > .5f ) {
-            triggerHeld[0] = 1;
-            Player_Use();
-        }
 
         // Initialize renderer color white for the background
         Render_SetDrawColor(Color_RGBToInt(37,143,18),0xff);
@@ -275,8 +200,7 @@ void EnterGameLoop() {
         SDL_RenderDrawRect(renderer, &controllerCursorRect);
         Obj_Tick();
         
-        V2 pos;
-        Obj_GetGlobalCenter(playerObj, &pos);
+        V2 pos = Obj_GetGlobalCenter(playerObj);
         //Render_String("393ffff93999",pos);
         // Update screen
         SDL_RenderPresent(renderer);
@@ -298,8 +222,11 @@ int main(int argc, char* argv[])
     Render_Init();
 
     srand(time(NULL));
-    Obj_Init();
 
+    Data_Init();
+    Obj_Init();
+    World_GenerateLand();
+    
     EnterGameLoop();
 
     // Destroy renderer

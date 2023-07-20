@@ -26,6 +26,7 @@ int Animal_Update();
 int Player_Update();
 void Player_Use();
 void Player_ReleaseUse();
+int Player_Death(Gobj *obj);
 int Box_Update();
 int Hopper_Update();
 

@@ -29,12 +29,12 @@ int MoveToAndAttack(Gobj *obj, Gobj *t, float speed, float minDist, float attack
 }
 int Animal_Update() {
     bool m = false;
-    if( o->parent ) {
+    if( Obj_GetPointed(o, OBJPARENT)) {
         Animal_Follower();
     }
     else {
         if( Obj_GetPointed(o, OBJTARGET) ) {
-            if( !MoveToAndAttack(o, Obj_GetPointed(o, OBJTARGET), 95.0f, 100, 24) ) {
+            if( !MoveToAndAttack(o, Obj_GetPointed(o, OBJTARGET), 95.0f, 250, 24) ) {
                 if( Obj_TickTimer(o, TIMERTARGET, 1)) {
                     Obj_SetPointed(o, 0, OBJTARGET);
                 }
@@ -61,18 +61,18 @@ void Animal_Wanderer() {
         check for edible objects and if they have a parent atack it
         */
         if( o->id != other->id ) {
-            if( Obj_HasFlag(other,LIVING) && o->team != other->team ) {
+            if( !Obj_HasFlag(other,STATIC) && Obj_HasFlag(other,LIVING) && o->team != other->team ) {
                 Obj_SetPointed(o, other, OBJTARGET);
                 Obj_SetTimer(o, 1, TIMERTARGET);
             }
         }
         else {
-            if( objects[i].parent ) {
+            if( Obj_GetPointed(&objects[i], OBJPARENT) ) {
             // o->target = objects[i].parent;
             }
             else {
                 // check whos more naturally aggressive
-                objects[i].parent = o;
+                Obj_SetPointed(&objects[i], o, OBJPARENT);
             }
             //parenting sets mate? if potential mates parent isnt null mayb target?
         }
@@ -85,14 +85,18 @@ void Animal_Wanderer() {
 }
 void Animal_Follower() {
     // change dist if parent attacking
-    
+    Gobj *parent = Obj_GetPointed(o, OBJPARENT);
     if( Obj_GetPointed(o, OBJTARGET) ) {
-        MoveToAndAttack(o, Obj_GetPointed(o, OBJTARGET), 95.0f, 100, 24);
+        if( !MoveToAndAttack(o, Obj_GetPointed(o, OBJTARGET), 95.0f, 200, 24) ) {
+            if( Obj_TickTimer(o, TIMERTARGET, 1)) {
+                Obj_SetPointed(o, 0, OBJTARGET);
+            }
+        }
     }
-    else if( Obj_GetPointed(o->parent, OBJTARGET) ) {
-        MoveToAndAttack(o, Obj_GetPointed(o->parent, OBJTARGET), 95.0f, 100, 24);
+    else if( Obj_GetPointed(parent, OBJTARGET) ) {
+        MoveToAndAttack(o, Obj_GetPointed(parent, OBJTARGET), 95.0f, 100, 24);
     }
-    else if( Obj_SqrDist(o, o->parent) > 60 ) {
-        Obj_MoveTo(o,o->parent, 95.0f);
+    else if( Obj_SqrDist(o, parent) > 30 ) {
+        Obj_MoveTo(o,parent, 95.0f);
     }
 }

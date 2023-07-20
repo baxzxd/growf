@@ -11,30 +11,32 @@
 #include "StandardObjs.h"
 
 float Obj_SqrDist(Gobj *objA, Gobj *objB) {
-    V2 c1,c2;
-    Obj_GetGlobalCenter(objA, &c1);
-    Obj_GetGlobalCenter(objB, &c2);
+    V2 c1 = Obj_GetGlobalCenter(objA);
+    V2 c2 = Obj_GetGlobalCenter(objB);
     return (c2-c1).Len();
 }
 void Obj_MoveTo(Gobj *objA, Gobj* objB, float v) {
-    V2 c1,c2;
-    Obj_GetGlobalCenter(objA, &c1);
-    Obj_GetGlobalCenter(objB, &c2);
+    V2 c1 = Obj_GetGlobalCenter(objA);
+    V2 c2 = Obj_GetGlobalCenter(objB);
     V2 dir = (c2 - c1).Norm();
     objA->vel = objA->vel + dir * v * del;
 }
 Gobj* proj;
-
+void Weapon_StaticInit() {
+    //init bullet types here mayb?
+}
 int Weapon_Update() {
     return 0;
 }
 int Weapon_Use(Gobj *obj) {
-    proj = Obj_Create(3,playerObj->pos + playerAim * 24.0f, playerAim * 500.0f, .5f);
+    proj = Obj_Create("box",playerObj->pos + playerAim * 24.0f, playerAim * 500.0f, .5f);
     proj->energy = -50.0f;
     return 0;
 }
 
 int Hopper_Update() {
+    if( !Obj_GetPointed( o, OBJPARENT ) )
+        return 0;
     for( int i = 0; i < maxObjects; i++ ) {
         if( &objects[i] == o || !Obj_HasFlag(&objects[i], IN_WORLD))
             continue;
@@ -43,7 +45,7 @@ int Hopper_Update() {
             continue;
         
         float d = Obj_SqrDist(o, &objects[i]);
-        if( d < 40 ) {
+        if( d < 120 ) {
             Obj_MoveTo(&objects[i], o, 140.0f);
             if( d < 12 ) {
                 Obj_GiveHealth(&objects[i], -objects[i].health);
@@ -79,7 +81,9 @@ int Box_Update() {
         /// if not same team damage else health or bullet back
         for( int i = 0; i < c.overlap; i++ ) {
             Gobj *obj = c.overlaps[i];
-            if(obj == o || o->parent && (obj == o->parent || obj->parent == o->parent )  )
+            Gobj *parent = Obj_GetPointed(o, OBJPARENT);
+            Gobj *objParent = Obj_GetPointed(obj, OBJPARENT);
+            if(obj == o || parent && (obj == parent || objParent == parent )  )
                 continue;
             
             if( o->energy < 0 ) {

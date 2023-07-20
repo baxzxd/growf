@@ -1,5 +1,6 @@
 #include <iostream>
 #include <algorithm>
+#include <string>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include "../main.h"
@@ -17,12 +18,18 @@ void Obj_GetUsableDistance(Gobj *obj){
 
     allow children to float freely in parent for containers
 */
-
+void Obj_ThrowChild( Gobj *obj, int index, V2 aim ) {
+    Gobj_Child ch = obj->children[index];
+    Child_GiveBond(obj, index, -ch.bond);
+    ch.o->vel = aim * 800;
+    ch.o->energy = -50;
+    ch.o->immunity = 0;
+}
 bool Obj_AddChild(Gobj *obj, Gobj *child, int bond, V2 pos, bool visible) {
     if( obj->childCount == 8 )
         return false;
-    if( child->parent ) {
-        Obj_RemoveChild(child->parent, child);
+    if( Obj_GetPointed(child, OBJPARENT) ) {
+        Obj_RemoveChild(Obj_GetPointed(child, OBJPARENT), child);
     }
     
     int emptyIndex = -1;
@@ -43,7 +50,7 @@ bool Obj_AddChild(Gobj *obj, Gobj *child, int bond, V2 pos, bool visible) {
     ch->visible = visible;
 
     child->held = true;
-    child->parent = obj;
+    Obj_SetPointed(child, obj, OBJPARENT);
     obj->childCount += 1;
     return true;
 }
@@ -51,7 +58,7 @@ void Obj_RemoveChild(Gobj *obj, int c) {
     Gobj *child = obj->children[c].o;
     child->immunity = .8f;
     child->held = false;
-    child->parent = 0;
+    Obj_SetPointed(child, 0, OBJPARENT);
     obj->children[c].inactive = true;   
     obj->childCount -= 1;
 }
@@ -72,12 +79,18 @@ void Obj_CheckChild(Gobj *obj, Gobj *child) {
     }
 }
 /// outputs to x and y
-void Obj_GetCenter(Gobj *obj, V2 *outPos) {
-    *outPos = (obj->data->size * obj->scale)/2.0f;
+V2 Obj_GetCameraPos(Gobj *obj) {
+    return obj->pos + cameraPos;
 }
-void Obj_GetGlobalCenter(Gobj *obj, V2 *outPos) {
-    Obj_GetCenter(obj, outPos);
-    *outPos = obj->pos + *outPos;
+V2 Obj_GetCenter(Gobj *obj) {
+    return (obj->data->size * obj->scale)/2.0f;
+}
+V2 Obj_GetGlobalCenter(Gobj *obj) {
+    V2 outPos = Obj_GetCenter(obj);
+    return obj->pos + outPos;
+}
+V2 Obj_GetCameraCenter(Gobj *obj) {
+    return Obj_GetGlobalCenter(obj) + cameraPos;
 }
 bool Obj_HasFlag(Gobj *o, Gobj_Flags flags) {
     return o->flags[(int)flags];
@@ -87,7 +100,24 @@ void Obj_SetFlag(Gobj *obj, Gobj_Flags flag, bool s) {
 }
 V2 Obj_GetSize(Gobj *obj) {
     V2Int v = obj->data->size * obj->scale;
+    if( obj->rotation == 270 ) {
+        return {-(float)v.y,(float)v.x};
+    }
+    else if( obj->rotation == 180 ) {
+        return {-(float)v.x,(float)v.y};
+    }
+    else if( obj->rotation == 90 ) {
+        return {(float)v.y,(float)v.x};
+    }
     return {(float)v.x,(float)v.y};
+}
+void Obj_AddScale(Gobj *obj, float sc) {
+    obj->scale += sc;
+    obj->size = Obj_GetSize(obj);
+}
+void Obj_Rotate(Gobj *obj, int d) {
+    obj->rotation = (obj->rotation + d) % 360;
+    obj->size = Obj_GetSize(obj);
 }
 SDL_Rect* Obj_GetRect(Gobj *obj, SDL_Rect *r) {
     V2 s = Obj_GetSize(obj);
@@ -99,9 +129,8 @@ SDL_Rect* Obj_GetRect(Gobj *obj, SDL_Rect *r) {
 }
 Gobj* Obj_CheckAtMouse() {
     // mayb move to mousePos
-
     for( int i = 0; i < maxObjects; i++ ) {
-        if( !Obj_HasFlag(&objects[i], IN_WORLD) || selObj == &objects[i] )
+        if( !Obj_HasFlag(&objects[i], IN_WORLD))// || selObj == &objects[i] )
             continue;
         V2 d = (mousePos - objects[i].pos);
         float l = d.Len();
@@ -132,15 +161,15 @@ bool Obj_TickTimer(Gobj *obj, Gobj_Timers timer, float v) {
     return false;
 }
 
-Gobj* Obj_Create(int id, V2 pos, float sc);
-Gobj* Obj_Create(int i, V2 pos, V2 vel, float sc) {
-    Gobj* obj = Obj_Create(i, pos, sc);
+Gobj* Obj_Create(std::string id, V2 pos, float sc);
+Gobj* Obj_Create(std::string id, V2 pos, V2 vel, float sc) {
+    Gobj* obj = Obj_Create(id, pos, sc);
     if( !obj )
         return 0;
     obj->vel = vel;
     return obj;
 }
-Gobj* Obj_Create(int id, V2 pos, float sc) {
+Gobj* Obj_Create(std::string id, V2 pos, float sc) {
     //find empty object
     int emptyIndex = -1;
     for( int i = 0; i < maxObjects; i++ ) {
@@ -158,6 +187,7 @@ Gobj* Obj_Create(int id, V2 pos, float sc) {
     obj->data = &objData[id];
     obj->pos = pos;
     obj->scale = sc;
+    obj->size = Obj_GetSize(obj);
     obj->health = obj->data->maxHealth;
     obj->immunity = 0;
 
@@ -165,9 +195,8 @@ Gobj* Obj_Create(int id, V2 pos, float sc) {
     
     obj->reserved = false;
     obj->held = false;
-    obj->parent = 0;
     obj->childCount = 0;
-
+    memset(&obj->pointers, 0, sizeof( obj->pointers));
     memset(&obj->flags, 0, sizeof( obj->flags ));
     Obj_SetFlag(obj, IN_WORLD, true);
     Obj_SetFlag(obj, JUST_CREATED, true);

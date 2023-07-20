@@ -51,7 +51,7 @@ uint32_t Color_rgb(double ratio)
     }
     return r + (g << 8) + (b << 16);
 }
-int Color_GetColorValue(ENUMCOLOR c, int v) {
+int Color_GetColorValue(int c, int v) {
     return 0;
 }
 void Color_RGBFromInt(int c, int *outR, int *outG, int *outB) {

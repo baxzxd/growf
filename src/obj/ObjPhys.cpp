@@ -40,16 +40,21 @@ void Obj_GetOverlaps(Gobj *obj, CollInfo *c) {
             //Obj_Collide(o, &objects[i]);
             c->overlaps[c->overlap] = &objects[i];
             c->overlap += 1;
+
+            if( Obj_HasFlag( &objects[i], STATIC )) {
+                
+            }
         }
     }
 
 }
+// get overlaps at the same time and find pairs?
 void Obj_Physics(float del) {
     Obj_GetOverlaps(o, &c);
     if( !o->held && !Obj_HasFlag(o, STATIC)) {
         o->pos = o->pos + o->vel * del;
         Friction(&o->vel);
-        Phys_Bounds();
+        //Phys_Bounds();
     }
 }
 
@@ -78,15 +83,14 @@ void Phys_Bounds() {
 
 // Returns true if two rectangles (l1, r1) and (l2, r2)
 // overlap
-SDL_Rect overlapRect;
+SDL_Rect overlapRect;   
+SDL_Rect result;
 bool doOverlap(SDL_Rect *rect, Gobj *obj) {
-    V2 size = Obj_GetSize(obj);
     overlapRect.x = (int)obj->pos.x;
     overlapRect.y = (int)obj->pos.y;
-    overlapRect.w = (int)size.x;
-    overlapRect.h = (int)size.y;
+    overlapRect.w = (int)obj->size.x;
+    overlapRect.h = (int)obj->size.y;
 
-    SDL_Rect result;
     SDL_bool b = SDL_IntersectRect(rect, &overlapRect, &result);
     return (bool)b;
 }

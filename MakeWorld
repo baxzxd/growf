@@ -11,11 +11,14 @@ OUTPUT = growf
 
 OBJS += $(patsubst %.cpp, %.o, $(shell find . -name \*.cpp))
 
-SRCDIR		= ./src ./src/obj ./src/world
+BASESRCDIR = ./src ./src/obj
+SRCDIR		= ./src/world
 VPATH		= $(SRCDIR)
 SRC		= $(foreach dir, $(SRCDIR), $(wildcard $(dir)/*.cpp))
+BASESRC		= $(foreach dir, $(BASESRCDIR), $(wildcard $(dir)/*.cpp))
 OBJ		= $(notdir $(patsubst %.cpp, %.o, $(SRC)))
-OBJS		= $(OBJ)
+BASEOBJ		= $(notdir $(patsubst %.cpp, %.o, $(BASESRC)))
+OBJS		= $(OBJ) $(BASEOBJ)
 
 all: clean ${OUTPUT} clean
 
@@ -24,4 +27,4 @@ ${OUTPUT}: ${OBJS}
 
 	
 clean:
-	rm -f $(OBJS)
+	rm -f $(OBJ)

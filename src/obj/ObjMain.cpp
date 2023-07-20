@@ -42,27 +42,33 @@ csv templates
 
     island like perlin noise and smaller "ore" stone chunks for map
     also water n such so irrigation can be added
+        painted world with fill material tool
 
+
+    big knockback on knockout
 */
 #include <iostream>
 #include <algorithm>
 #include <vector>
+#include <string>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include "../main.h"
+#include "../world/world.h"
 #include "../color.h"
 #include "../render.h"
 #include "ObjMain.h"
 #include "ObjUtil.h"
 #include "ObjPhys.h"
 #include "StandardObjs.h"
+#include "ObjData.h"
 
 using namespace std;
 
 Gobj *o;
 GobjData *oData;
 Gobj *playerObj;
-Gobj *selObj;
+Gobj *cameraFocus;
 
 bool playerHasObj = false;
 int totalObjects;
@@ -71,35 +77,49 @@ Gobj objects[maxObjects];
 float RandRange(int w, int d) {
     return ((rand()%(w*2)) - w)/d;
 }
-
-void World_ScatterObj(int id, int amount) {
+void World_ScatterObj( std::string id, int amount ) {
     for( int i = 0; i < amount; i++ ) {            
         Gobj *tree = Obj_Create(id, {(float)(rand()%SCREEN_WIDTH),(float)(rand()%SCREEN_HEIGHT)}, 1);
     }
 }
+void World_ScatterObj(std::string id, int amount, Gobj* objs[]) {
+    for( int i = 0; i < amount; i++ ) {            
+        Gobj *tree = Obj_Create(id, {(float)(rand()%SCREEN_WIDTH),(float)(rand()%SCREEN_HEIGHT)}, 1);
+        objs[i] = tree;
+    }
+}
+#include "../FastNoiseLite.h"
 void Obj_Init() {
     for( int i = 0; i < maxObjects; i++ ) {
-        objects[i].data = &objData[3];
+        objects[i].data = &objData["tree"];
         objects[i].health = -1;
+        
+        //[prolly messy]
+        objects[i].referencesTo = 0;
+        memset(objects[i].flags, 0, sizeof(objects[i].flags));
     }
-
-    playerObj = Obj_Create(0,{200.0f,200.0f},1);
+    totalObjects = 0;
+    playerObj = Obj_Create("player",{200.0f,200.0f},1);
     Obj_SetFlag(playerObj, LIVING, true);
+    cameraFocus = playerObj;
 
-    Gobj *hopper = Obj_Create(4, {(float)(rand()%SCREEN_WIDTH),(float)(rand()%SCREEN_HEIGHT)}, 1);
-    World_ScatterObj(1, 7);
-    World_ScatterObj(6, 2);
-    World_ScatterObj(7, 5);
-
-
+    Obj_Create("hopper", {(float)(rand()%SCREEN_WIDTH),(float)(rand()%SCREEN_HEIGHT)}, 1);
+    Gobj* treesArr[7];
+    World_ScatterObj("tree", 7, treesArr);
+    for( int i = 0; i < 7; i++ ) {
+        treesArr[i]->energy = 400;
+    }
+    World_ScatterObj("stone", 2);
+    World_ScatterObj("nail", 5);
 }            
 
 // display angled objects as 2 rects?
 void Obj_Render(Gobj *obj) {   
-    V2 mid;
-    Obj_GetGlobalCenter(obj, &mid);
-    squareRect.x = (int)obj->pos.x;
-    squareRect.y = (int)obj->pos.y;
+    V2 pos;
+        pos = Obj_GetCameraPos(obj);
+
+    squareRect.x = (int)pos.x;
+    squareRect.y = (int)pos.y;
     if( Obj_HasFlag(obj, SHADOW) ) {
         SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 96);
         
@@ -109,22 +129,21 @@ void Obj_Render(Gobj *obj) {
         SDL_RenderFillRect(renderer, &squareRect);
     }
 
-    V2 size = Obj_GetSize(obj);
-    squareRect.h = (int)size.y;
-    squareRect.w = (int)size.x;
+    squareRect.h = (int)obj->size.y;
+    squareRect.w = (int)obj->size.x;
     Render_SetDrawColor(Color_Brightness(obj->data->color, .5f), 0xFF);
     SDL_RenderFillRect(renderer, &squareRect);
     
     float healthRatio = ((float)obj->health/(float)obj->data->maxHealth);
     if( healthRatio > 1 )
         healthRatio = 1;
-    V2 s = size * healthRatio;
+    V2 s = obj->size * healthRatio;
     squareRect.w = (int)s.x; 
     squareRect.h = (int)s.y; 
 
-    V2 d = (size - s)/2;
-    squareRect.x = (int)(obj->pos.x + d.x);
-    squareRect.y = (int)(obj->pos.y + d.y);
+    V2 d = (obj->size - s)/2;
+    squareRect.x = (int)(pos.x + d.x);
+    squareRect.y = (int)(pos.y + d.y);
     Render_SetDrawColor(obj->data->color, 0xFF);
     SDL_RenderFillRect(renderer, &squareRect);
 }     
@@ -137,7 +156,7 @@ void Tick(Gobj *obj) {
     if( !Obj_HasFlag(o, IN_WORLD) ) 
         return;
     if( Obj_HasFlag(o, JUST_CREATED) ) {
-        if( o->data->funcs->funcInit )
+        if( o->data->funcs->funcInit ) 
             o->data->funcs->funcInit();
         Obj_SetFlag(o,JUST_CREATED, false);
         return;
@@ -165,9 +184,10 @@ void Tick(Gobj *obj) {
     o->cPos = o->pos + rSize / 2;
     
     if( !o->held ) {
-        Obj_Render(o);
+        //prerender?
         if( oData->funcs->funcRender )
             oData->funcs->funcRender();
+        Obj_Render(o);
         if( o->childCount ) {
             for( int i = 0; i < CHILD_COUNT; i++ ) {
                 if( o->children[i].inactive )
@@ -179,41 +199,22 @@ void Tick(Gobj *obj) {
         }
     }
 }
-float spawnTime = 0;
-float spawnTimer = 0;
-Gobj *spawns[16];
-int spawnss = 0;
+struct ObjSelection {
+    Gobj *obj;
+    int color;
+    SDL_Rect r;
+    bool inactive = false;
+};
+
+ObjSelection selections[8];
 void Obj_Tick() {
-    
-    for( int i = 0; i < 16; i++ ) {
-        if( spawns[i] && spawns[i]->health == -1 ) {
-            std::cout<<"dog spawn died"<<std::endl;
-            spawns[i]->reserved = false;
-            spawns[i] = 0;
-            spawnss--;
-        }
-    }
-    if( spawnss < 5 ) {
-        spawnTime -= del;
-        if( spawnTime <= 0 ) {
-            V2 pos;
-            pos = {(float)(rand()%SCREEN_WIDTH), 0.0f};
-            
-            Gobj *spawn = Obj_Create(2,pos,RandV2(100),2);
-            spawn->team = 1;
-
-            int r = -1;
-            for( int i = 0; i < 16; i++ ) {
-                if( !spawns[i] ) {
-                    r = i;
-                    break;
-                }
-            }   
-            spawns[r] = spawn;
-            spawnss++;
-            spawn->reserved = true;
-
-            spawnTime = rand()%4+1;
+    noiseDestRect.w = tileSize * chunkSize;
+    noiseDestRect.h = tileSize * chunkSize;
+    for( int x = 0; x < worldDim; x++ ) {
+        for( int y = 0; y < worldDim; y++ ) {
+            noiseDestRect.x = x * tileSize * chunkSize + cameraPos.x;
+            noiseDestRect.y = y * tileSize * chunkSize + cameraPos.y;
+            SDL_RenderCopy(renderer,chunkTextures[x][y], NULL, &noiseDestRect);
         }
     }
 
@@ -221,21 +222,19 @@ void Obj_Tick() {
         Tick(&objects[i]);
     }
 
-    if( selObj ) {
-        Render_SetDrawColor(Color_RGBToInt(255,255,255), 255);
-        
-        SDL_Rect r;
-        SDL_RenderDrawRect(renderer, Obj_GetRect(selObj, &r));
-
-        Render_String(selObj->data->id + ":" + std::to_string(selObj->health), {(float)r.x,(float)r.y}, 12,15);
+    for( int i = 0; i < 8; i++ ) {
+        if( selections[i].inactive )
+            continue;
+    
+        //Render_SetDrawColor(Color_RGBToInt(255,255,255), 255);
+        //SDL_RenderDrawRect(renderer, Obj_GetRect(selections[i].obj, &selections[i].r));
+        //Render_String(selections[i].obj->data->id + ":" + std::to_string(selections[i].obj->health), {(float)selections[i].r.x,(float)selections[i].r.y}, 12,15);
     }
 }
 void Obj_Collide(Gobj *obj, Gobj *collObj) {
     V2 mid = (obj->pos + collObj->pos)/2;
-    V2 size = Obj_GetSize(obj) * .5f;
-    V2 collSize = Obj_GetSize(collObj);
-    float mass = size.x * size.y; // scale mass mayb idk its not that strong
-    float collMass = collSize.x * collSize.y;
+    float mass = (obj->size.x * obj->size.y) * .5f; // scale mass mayb idk its not that strong
+    float collMass = collObj->size.x * collObj->size.y;
     collObj->vel = o->vel - (o->vel * mass) / collMass;
 }
 void Obj_Decay(Gobj *obj) {
@@ -254,7 +253,6 @@ void Child_GiveBond(Gobj *obj, int child, int b) {
 void Obj_GiveHealth(Gobj *obj, int h) {
     if( h < 0 && obj->immunity ) 
         return;
-        painted world with fill material tool
     obj->health += h;
     if( h < 0 ) {
         for( int i = 0; i < CHILD_COUNT; i++ ) {
@@ -273,8 +271,8 @@ void Obj_Death(Gobj *obj) {
         obj->data->funcs->funcDeath(obj);
     Obj_SetFlag(obj, IN_WORLD, false);
     obj->health = -1;
-    if( obj->parent ) {
-        Obj_CheckChild(obj->parent, obj);
+    if( Obj_GetPointed(obj, OBJPARENT) ) {
+        Obj_CheckChild(Obj_GetPointed(obj, OBJPARENT), obj);
     }
     //Obj_FillArrayHole();
     totalObjects -= 1;

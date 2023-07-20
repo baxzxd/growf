@@ -1,6 +1,8 @@
 #ifndef OBJ_MAIN
 #define OBJ_MAIN
 #include <SDL2/SDL.h>
+#include <string>
+#include <map>
 
 struct Gobj;
 struct Gobj_Func {
@@ -13,16 +15,13 @@ struct Gobj_Func {
 /// id, health, w, h, scale, color, update
 
 struct GobjData{
-    std::string id = "";
+    std::string id;
     /// possibly rename to basescale
     V2Int size;
     // bitshift to get r,g,b?
     int color = 256;
     int maxHealth = 100;
     Gobj_Func *funcs;
-    
-    GobjData(char i[], int health, V2Int s, int c, Gobj_Func *func) : 
-            id(i), maxHealth(health), size(s), color(c), funcs(func){}
 };
 // obj data
 typedef enum {
@@ -43,20 +42,25 @@ struct Gobj_Child {
     V2 pos;
     bool inactive = true;
     bool visible = true;
+    bool giveEnergy;
+    float energyTransfer;
 };
 const int OBJ_POINTER_AMOUNT = 8;
 const int CHILD_COUNT = 8;
 struct Gobj {
-    int id;
+    std::string id;
     V2 pos;
     V2 cPos;
     V2 vel;
+    int rotation = 0;
     int team = 0;
+    int subType;
     int health = 10;
     int color = 256;
     int growthStage;
     float growth;
     float scale = 1;
+    V2 size;
     float immunity = 0;
     int tickArgs[32];
     float timers[16]; // every other index stores actual timer? first stores default value?
@@ -70,7 +74,7 @@ struct Gobj {
     bool flags[64];
 
     // array of pointers instead to use funcs? obj keeps count of references to it and then is freed
-    Gobj *parent;
+    //Gobj *parent;
     //Gobj *target;
 
     Gobj *pointers[OBJ_POINTER_AMOUNT];
@@ -109,7 +113,7 @@ struct ObjController {};
 extern int totalObjects;
 const int maxObjects = 1024;
 extern Gobj objects[maxObjects];
-extern GobjData objData[8];
+extern std::map<std::string, GobjData> objData;
 extern Gobj_Func objFuncs[8];
 extern Gobj *playerObj;
 extern Gobj *o;
@@ -120,7 +124,6 @@ void Obj_Tick();
 void Obj_Render(Gobj *obj);
 void Obj_Death(Gobj *obj);
 void Obj_GiveHealth(Gobj *obj, int h);
-void Obj_GetGlobalCenter(Gobj *obj, V2 *outPos);
 void Obj_MoveTo(Gobj *objA, Gobj *objB, float f);
 void Child_GiveBond(Gobj *obj, int child, int b);
 /// checks if selObj needs updated, or for obj interactions

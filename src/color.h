@@ -4,11 +4,6 @@
 #include <SDL2/SDL_ttf.h>
 #include "main.h"
 
-typedef enum {
-    r,
-    g,
-    b
-} ENUMCOLOR;
 
 uint32_t Color_rgb();
 int Color_GetColorValue();
