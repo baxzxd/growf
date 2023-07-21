@@ -3,6 +3,7 @@
 #include <SDL2/SDL.h>
 #include <string>
 #include <map>
+#include "../main.h"
 
 struct Gobj;
 struct Gobj_Func {

@@ -109,7 +109,7 @@ int Plant_Update() {
                 }
             }
             else {
-                Obj_AddScale(o, 2.0f*del);
+                Obj_AddScale(o, 0.7f*del);
             }
             
             if( o->scale >= 10.0f ) {

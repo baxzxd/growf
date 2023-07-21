@@ -6,6 +6,7 @@
 #include "../main.h"
 #include "../color.h"
 #include "../render.h"
+#include "../world/world.h"
 #include "ObjMain.h"
 #include "ObjUtil.h"
 #include "ObjPhys.h"
@@ -48,13 +49,46 @@ void Obj_GetOverlaps(Gobj *obj, CollInfo *c) {
     }
 
 }
+
+void World_Unstuckify(Gobj *obj) {
+
+    int tryCount = 0;
+    int tX,tY;
+    V2 oPos = o->pos / tileSize;
+    // check in growing radius?
+    for( int x = -1; x < 2; x++ ) {
+        for( int y = -1; y < 2; y++ ) {
+            WorldTile *tryTile = &tiles[(int)oPos.x + x][(int)oPos.y + y];
+            if( !tryTile->height || (x==1 && y==1))
+                o->pos = tryTile->pos;
+        }
+    }
+}
 // get overlaps at the same time and find pairs?
 void Obj_Physics(float del) {
-    Obj_GetOverlaps(o, &c);
     if( !o->held && !Obj_HasFlag(o, STATIC)) {
-        o->pos = o->pos + o->vel * del;
+        V2 oldPos = o->pos;
+        //check y
+        V2 vD = o->vel * del;
+        o->pos = o->pos + V2{0,vD.y}; 
+        bool coll = World_CheckToMap(o);
+        if( coll ) {
+            o->pos = oldPos;
+            o->vel.y = 0;
+        }
+        oldPos = o->pos;
+        o->pos = o->pos + V2{vD.x,0}; 
+        coll = World_CheckToMap(o);
+        if( coll ) {
+            o->pos = oldPos;
+            o->vel.x = 0;
+            coll = World_CheckToMap(o);
+            if( coll )
+                World_Unstuckify(o);
+        }
+
         Friction(&o->vel);
-        //Phys_Bounds();
+        Obj_GetOverlaps(o, &c);
     }
 }
 

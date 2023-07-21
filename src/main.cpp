@@ -120,7 +120,7 @@ void EnterGameLoop() {
         else {
             mousePos = GetMousePos();
         }
-        mousePos = mousePos + cameraPos;
+        mousePos = mousePos - cameraPos;
         UpdateMouseRect();
 
         // fire projectile
@@ -226,6 +226,7 @@ int main(int argc, char* argv[])
     Data_Init();
     Obj_Init();
     World_GenerateLand();
+
     
     EnterGameLoop();
 

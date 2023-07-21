@@ -103,12 +103,9 @@ void Obj_Init() {
     Obj_SetFlag(playerObj, LIVING, true);
     cameraFocus = playerObj;
 
+
+
     Obj_Create("hopper", {(float)(rand()%SCREEN_WIDTH),(float)(rand()%SCREEN_HEIGHT)}, 1);
-    Gobj* treesArr[7];
-    World_ScatterObj("tree", 7, treesArr);
-    for( int i = 0; i < 7; i++ ) {
-        treesArr[i]->energy = 400;
-    }
     World_ScatterObj("stone", 2);
     World_ScatterObj("nail", 5);
 }            

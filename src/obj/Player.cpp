@@ -64,9 +64,11 @@ int Player_Update() {
     float vel = 240;
     o->vel = o->vel + V2{(float)playerDir.x,(float)playerDir.y} * (vel * del); 
     
+    V2 playerWorld = Obj_GetGlobalCenter(playerObj);
+    V2 mouseRel = playerWorld + (((mousePos) - playerWorld).Norm() * 24);
+
     V2 playerCam = Obj_GetCameraCenter(playerObj);
-    V2 mouseRel = playerCam + (((mousePos) - playerCam).Norm() * 24);
-    V2 mouseRelCam = playerCam + (((mousePos-cameraPos) - playerCam).Norm() * 24);
+    V2 mouseRelCam = playerCam + (((mousePos+cameraPos) - playerCam).Norm() * 24);
     interactRect.x = (int)mouseRel.x - interactRect.w/2;
     interactRect.y = (int)mouseRel.y - interactRect.h/2;
     interactRectVisual.x = (int)mouseRelCam.x - interactRect.w/2;

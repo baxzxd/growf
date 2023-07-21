@@ -69,6 +69,7 @@ struct V2 {
             return {0.0f,0.0f};
         return {x/len,y/len};
     }
+
     
 };
 
@@ -93,6 +94,7 @@ struct V2Int {
         v.y /= f;
         return v;
     }
+
 };
 
 V2 RandV2(int r);
