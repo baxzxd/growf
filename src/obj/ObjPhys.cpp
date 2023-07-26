@@ -5,7 +5,7 @@
 #include <SDL2/SDL_ttf.h>
 #include "../main.h"
 #include "../color.h"
-#include "../render.h"
+#include "../render/render.h"
 #include "../world/world.h"
 #include "ObjMain.h"
 #include "ObjUtil.h"
@@ -58,9 +58,9 @@ void World_Unstuckify(Gobj *obj) {
     // check in growing radius?
     for( int x = -1; x < 2; x++ ) {
         for( int y = -1; y < 2; y++ ) {
-            WorldTile *tryTile = &tiles[(int)oPos.x + x][(int)oPos.y + y];
-            if( !tryTile->height || (x==1 && y==1))
-                o->pos = tryTile->pos;
+            //WorldTile *tryTile = &tiles[(int)oPos.x + x][(int)oPos.y + y];
+            //if( !tryTile->height || (x==1 && y==1))
+            //   o->pos = tryTile->pos;
         }
     }
 }

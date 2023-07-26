@@ -5,7 +5,7 @@
 #include "main.h"
 
 
-uint32_t Color_rgb();
+uint32_t Color_rgb(double ratio);
 int Color_GetColorValue();
 void Color_RGBFromInt(int c, int *r, int *g, int *b);
 int Color_RGBToInt(int r, int g, int b);

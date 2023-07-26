@@ -3,14 +3,8 @@
 #include <time.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
-#include "main.h"
-#include "render.h"
 #include "color.h"
 #include "input.h"
-#include "obj/ObjMain.h"
-#include "obj/ObjData.h"
-#include "obj/StandardObjs.h"
-#include "audio.h"
 
 // joystick
 CONTROLLERSTICK stick;
@@ -59,8 +53,8 @@ void Joystick_Update() {
     //controllerCursorPos = controllerCursorPos + joyV * 120.0f * del;
     controllerCursorPos = joyV * 120.0f;
 
-    controllerCursorRect.x = (int)playerObj->pos.x + (int)controllerCursorPos.x - 8;
-    controllerCursorRect.y = (int)playerObj->pos.y + (int)controllerCursorPos.y - 8;
+    //controllerCursorRect.x = (int)playerObj->pos.x + (int)controllerCursorPos.x - 8;
+    //controllerCursorRect.y = (int)playerObj->pos.y + (int)controllerCursorPos.y - 8;
     controllerCursorRect.w = 16;
     controllerCursorRect.h = 16;
     
@@ -71,7 +65,6 @@ void Joystick_Update() {
     }
     else if( joystickAxes[4] > .5f ) {
         triggerHeld[0] = 1;
-        Player_Use();
     }
 }
 void Joystick_Added(SDL_Event *e) {

@@ -114,7 +114,8 @@ extern float len;
 extern SDL_Rect textRect; 
 
 extern float del;
-
+extern bool mouseClicked;
+extern bool mouseJustClicked;
 /// 0 - playing
 /// 1 - paused
 extern int gameState;

@@ -73,6 +73,7 @@ struct Gobj {
 
     int energy; ///used for health loss, moving?
     bool flags[64];
+    int states[8];
 
     // array of pointers instead to use funcs? obj keeps count of references to it and then is freed
     //Gobj *parent;

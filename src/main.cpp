@@ -35,15 +35,17 @@
 #include <SDL2/SDL_ttf.h>
 #include "main.h"
 #include "joystick.h"
-#include "render.h"
+#include "render/render.h"
 #include "color.h"
 #include "input.h"
+#include "window/window.h"
 #include "world/world.h"
 #include "obj/ObjMain.h"
 #include "obj/ObjData.h"
 #include "obj/ObjUtil.h"
 #include "obj/StandardObjs.h"
 #include "audio.h"
+#include "gamemode/Survival.h"
 using namespace std;
 
 
@@ -90,8 +92,12 @@ void UpdateMouseRect() {
 }
 
 //remove direct access to joypressed and keypressed and add actions with bindings
-
+bool mouseClicked = false;
+bool mouseJustClicked = false;
 V2 cameraPos;
+V2Int tileMousePos;
+WorldTile *t;
+int selectedTile = 0;int tilesChanged = 0;
 void EnterGameLoop() {
     // Event loop exit flag
     bool quit = false;
@@ -127,7 +133,21 @@ void EnterGameLoop() {
         V2 d = mousePos - playerObj->pos;
         playerAim = d.Norm();
 
+        Window_Main();
 
+        // Initialize renderer color white for the background
+        Render_SetDrawColor(Color_RGBToInt(37,143,18),0xff);
+
+        // Clear screen
+        SDL_RenderClear(renderer);
+        Render_SetDrawColor(Color_RGBToInt(255,0,0),0xff);
+        World_Render();
+
+        if( mouseJustClicked )
+            mouseJustClicked = false;
+            
+        // ingame input?
+        int chunkX, chunkY;
         switch(e.type) {
             // User requests quit
             case SDL_QUIT:
@@ -139,7 +159,12 @@ void EnterGameLoop() {
 
                 switch(e.button.button){
                     case 1:
+                        mouseClicked = true;
+                        mouseJustClicked = true;
                         Player_Use();
+                        
+                        tilesChanged = 0;
+                        World_ChangeTile("grass", V2Int{(int)mousePos.x,(int)mousePos.y}, 2);
                     break;
                     case 2:
                         Player_ReleaseUse();
@@ -148,6 +173,8 @@ void EnterGameLoop() {
                 }
             break;
             case SDL_MOUSEBUTTONUP:
+                mouseClicked = false;
+                mouseJustClicked = false;
                 usingJoystick = false;
                 Player_ReleaseUse();
             break;
@@ -190,12 +217,6 @@ void EnterGameLoop() {
 
 
 
-        // Initialize renderer color white for the background
-        Render_SetDrawColor(Color_RGBToInt(37,143,18),0xff);
-
-        // Clear screen
-        SDL_RenderClear(renderer);
-        Render_SetDrawColor(Color_RGBToInt(255,0,0),0xff);
 
         SDL_RenderDrawRect(renderer, &controllerCursorRect);
         Obj_Tick();
@@ -203,10 +224,15 @@ void EnterGameLoop() {
         V2 pos = Obj_GetGlobalCenter(playerObj);
         //Render_String("393ffff93999",pos);
         // Update screen
+        Render_Main();
+        Window_Render();
+
         SDL_RenderPresent(renderer);
 
         memset(keysJustPressed, 0, sizeof(keysJustPressed));
         memset(joyJustPressed, 0, sizeof(joyJustPressed));
+
+        Survival_Tick();
     }
 }
 int main(int argc, char* argv[])
@@ -222,10 +248,11 @@ int main(int argc, char* argv[])
     Render_Init();
 
     srand(time(NULL));
-
+    
+    Window_StaticInit();
     Data_Init();
     Obj_Init();
-    World_GenerateLand();
+    World_Init();
 
     
     EnterGameLoop();

@@ -1,0 +1,1 @@
+void Survival_Tick();

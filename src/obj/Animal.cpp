@@ -4,7 +4,7 @@
 #include <SDL2/SDL_ttf.h>
 #include "../main.h"
 #include "../color.h"
-#include "../render.h"
+#include "../render/render.h"
 #include "ObjMain.h"
 #include "ObjUtil.h"
 
@@ -29,19 +29,32 @@ int MoveToAndAttack(Gobj *obj, Gobj *t, float speed, float minDist, float attack
 }
 int Animal_Update() {
     bool m = false;
-    if( Obj_GetPointed(o, OBJPARENT)) {
-        Animal_Follower();
-    }
-    else {
-        if( Obj_GetPointed(o, OBJTARGET) ) {
-            if( !MoveToAndAttack(o, Obj_GetPointed(o, OBJTARGET), 95.0f, 250, 24) ) {
-                if( Obj_TickTimer(o, TIMERTARGET, 1)) {
-                    Obj_SetPointed(o, 0, OBJTARGET);
+    switch( o->state ) {
+        // egg?
+        case 0:
+            // if objCounters is 1 then just turn ito baby with effect
+            // if greater copy current obj and create baby
+        break;
+        //baby
+        case 1:
+        break;
+        //adult
+        case 2:
+            if( Obj_GetPointed(o, OBJPARENT)) {
+                Animal_Follower();
+                break;
+            }
+
+            if( Obj_GetPointed(o, OBJTARGET) ) {
+                if( !MoveToAndAttack(o, Obj_GetPointed(o, OBJTARGET), 95.0f, 250, 24) ) {
+                    if( Obj_TickTimer(o, TIMERTARGET, 1)) {
+                        Obj_SetPointed(o, 0, OBJTARGET);
+                    }
                 }
             }
-        }
-        else
-            Animal_Wanderer();
+            else
+                Animal_Wanderer();
+        break;
     }
     return 0;
 }

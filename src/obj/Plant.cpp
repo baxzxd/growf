@@ -5,7 +5,7 @@
 #include <SDL2/SDL_ttf.h>
 #include "../main.h"
 #include "../color.h"
-#include "../render.h"
+#include "../render/render.h"
 #include "ObjMain.h"
 #include "ObjUtil.h"
 #include "ObjPhys.h"

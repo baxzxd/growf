@@ -54,13 +54,12 @@ csv templates
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include "../main.h"
-#include "../world/world.h"
 #include "../color.h"
-#include "../render.h"
+#include "../render/render.h"
+#include "../world/world.h"
 #include "ObjMain.h"
 #include "ObjUtil.h"
 #include "ObjPhys.h"
-#include "StandardObjs.h"
 #include "ObjData.h"
 
 using namespace std;
@@ -112,9 +111,7 @@ void Obj_Init() {
 
 // display angled objects as 2 rects?
 void Obj_Render(Gobj *obj) {   
-    V2 pos;
-        pos = Obj_GetCameraPos(obj);
-
+    V2 pos = Obj_GetCameraPos(obj);
     squareRect.x = (int)pos.x;
     squareRect.y = (int)pos.y;
     if( Obj_HasFlag(obj, SHADOW) ) {
@@ -200,20 +197,20 @@ struct ObjSelection {
     Gobj *obj;
     int color;
     SDL_Rect r;
-    bool inactive = false;
+    bool inactive = true;
 };
-
 ObjSelection selections[8];
 void Obj_Tick() {
-    noiseDestRect.w = tileSize * chunkSize;
-    noiseDestRect.h = tileSize * chunkSize;
-    for( int x = 0; x < worldDim; x++ ) {
-        for( int y = 0; y < worldDim; y++ ) {
+    /*
+    for( int x = -1; x < (SCREEN_WIDTH / tileSize)/chunkSize; x++ ) {
+        for( int y = -1; y < (SCREEN_HEIGHT / tileSize)/chunkSize; y++ ) {
             noiseDestRect.x = x * tileSize * chunkSize + cameraPos.x;
             noiseDestRect.y = y * tileSize * chunkSize + cameraPos.y;
-            SDL_RenderCopy(renderer,chunkTextures[x][y], NULL, &noiseDestRect);
+            if( camX + x > 0 && camY + y > 0 )
+                SDL_RenderCopy(renderer,chunkTextures[camX + x][camY + y], NULL, &noiseDestRect);
         }
     }
+*/
 
     for( int i = 0; i < maxObjects; i++ ) {
         Tick(&objects[i]);
@@ -223,16 +220,19 @@ void Obj_Tick() {
         if( selections[i].inactive )
             continue;
     
-        //Render_SetDrawColor(Color_RGBToInt(255,255,255), 255);
-        //SDL_RenderDrawRect(renderer, Obj_GetRect(selections[i].obj, &selections[i].r));
-        //Render_String(selections[i].obj->data->id + ":" + std::to_string(selections[i].obj->health), {(float)selections[i].r.x,(float)selections[i].r.y}, 12,15);
+        Render_SetDrawColor(Color_RGBToInt(255,255,255), 255);
+        SDL_RenderDrawRect(renderer, Obj_GetRect(selections[i].obj, &selections[i].r));
+        Render_String(selections[i].obj->data->id + ":" + std::to_string(selections[i].obj->health), {(float)selections[i].r.x,(float)selections[i].r.y}, 12,15);
     }
 }
+
+//use speckled texture for banana spots
+//create multiple textures for speckles
 void Obj_Collide(Gobj *obj, Gobj *collObj) {
     V2 mid = (obj->pos + collObj->pos)/2;
     float mass = (obj->size.x * obj->size.y) * .5f; // scale mass mayb idk its not that strong
     float collMass = collObj->size.x * collObj->size.y;
-    collObj->vel = o->vel - (o->vel * mass) / collMass;
+    collObj->vel = collObj->vel + (o->vel * mass) / (collMass*.5f);
 }
 void Obj_Decay(Gobj *obj) {
     obj->timers[2] -= del;

@@ -5,7 +5,7 @@
 #include <SDL2/SDL_ttf.h>
 #include "../main.h"
 #include "../color.h"
-#include "../render.h"
+#include "../render/render.h"
 #include "ObjMain.h"
 #include "ObjUtil.h"
 #include "ObjPhys.h"
@@ -181,7 +181,7 @@ Gobj* Obj_Create(std::string id, V2 pos, float sc) {
     if( emptyIndex == -1 )
         return 0;
     
-    std::cout<<"CREATED OBJ AT INDEX "<<emptyIndex<<":"<<objects[emptyIndex].held<<std::endl;
+    //std::cout<<"CREATED OBJ AT INDEX "<<emptyIndex<<":"<<objects[emptyIndex].held<<std::endl;
     Gobj *obj = &objects[emptyIndex];
     obj->id = id;
     obj->data = &objData[id];

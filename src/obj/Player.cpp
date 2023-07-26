@@ -5,7 +5,7 @@
 #include "../main.h"
 #include "../joystick.h"
 #include "../color.h"
-#include "../render.h"
+#include "../render/render.h"
 #include "ObjMain.h"
 #include "ObjUtil.h"
 #include "ObjPhys.h"
@@ -160,5 +160,4 @@ void Player_ReleaseUse() {
     //    return;
     
     //selObj->target = hovered;
-    std::cout<<"outher sel"<<std::endl;
 }
