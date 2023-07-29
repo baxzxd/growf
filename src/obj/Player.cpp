@@ -6,10 +6,42 @@
 #include "../joystick.h"
 #include "../color.h"
 #include "../render/render.h"
+#include "../world/world.h"
+
 #include "ObjMain.h"
 #include "ObjUtil.h"
 #include "ObjPhys.h"
 #include "StandardObjs.h"
+
+#include "../audio.h"
+std::vector<InventorySlot> inventory;
+int selSlot = 0;
+// create slots in world when changed?
+//flipping tile when broken?
+void Inventory_AddTiles(InventorySlot *slot) {
+    int e = -1;
+    for( int s = 0; s < inventory.size(); s++ ) {
+        if( slot->id == inventory[s].id ) {
+            e = s;
+            break;
+        }
+    }
+    std::cout<<"player got "<<slot->amount<<" "<<slot->id<<std::endl;
+
+    if( e != -1 ) {
+        inventory[e].amount += slot->amount;
+    }
+    else {
+        inventory.resize(inventory.size()+1);
+        inventory[inventory.size()-1].id = slot->id;
+        inventory[inventory.size()-1].amount = slot->amount;
+    }
+}
+void Player_AddWorldChange() {
+    for( int i = 0; i < change.tileTypes; i++ ) {
+        Inventory_AddTiles(&change.slots[i]);
+    }
+}
 
 V2 playerDir;
 SDL_Rect interactRect = {0,0,32,32};
@@ -25,6 +57,19 @@ int breakCount;
 //default to -1 each grab? 
     //while loop for dumb array gaps
 
+
+//tile icon over mouse that gets lerped into position and once in place regrows on mouse
+//dial for tile inventory?
+bool tileLerpActive = false;
+float tileLerpTime = .2f;
+float tileLerp = tileLerpTime;
+V2 tilePos;
+V2 clickPos;
+V2 tileLerpDiff;
+SDL_Rect tileRect = { 0, 0, tileSize, tileSize };
+
+void OnTilePlaced(V2 p) { //[CHANGE] maybe pass tile
+}
 int Player_Death(Gobj *obj) {
     Game_Reset();
     return 0;
@@ -63,7 +108,11 @@ int Player_Update() {
     
     float vel = 240;
     o->vel = o->vel + V2{(float)playerDir.x,(float)playerDir.y} * (vel * del); 
-    
+
+    // fire projectile
+    V2 d = worldMousePos - playerObj->pos;
+    o->look = d.Norm();
+
     V2 playerWorld = Obj_GetGlobalCenter(playerObj);
     V2 mouseRel = playerWorld + (((mousePos) - playerWorld).Norm() * 24);
 
@@ -126,16 +175,9 @@ int Player_Update() {
     }
     
     lastPlayerDir = playerDir;
-
-    if( o->pos.x > SCREEN_WIDTH/2 ) {
-        cameraPos.x =  SCREEN_WIDTH/2 - o->pos.x;
-    }
-    if( o->pos.y > SCREEN_WIDTH/2 ) {
-        cameraPos.y = SCREEN_HEIGHT/2 - o->pos.y;
-    }
+    Render_SetCameraOffset(o->pos);
     return 0;
 }
-
 void Player_Use() {
     //selObj = Obj_CheckAtMouse();
     if( grabSelection != -1 && !playerObj->children[grabSelection].inactive ) {
@@ -143,6 +185,7 @@ void Player_Use() {
         
         // PASS POINTER TO FUNC? DAMN
         if( ch.o->data->funcs->funcUse ) {
+            ch.o->look = o->look;
             ch.o->data->funcs->funcUse(ch.o);
 
             if( Obj_HasFlag(ch.o, STATIC) )
@@ -150,14 +193,124 @@ void Player_Use() {
         }
     }
     else {
-        Weapon_Use(playerObj);
+        if( !inventory.size() ) 
+            return;
+        int c = World_ChangeTile(inventory[selSlot].id, V2Int{(int)worldMousePos.x,(int)worldMousePos.y}, 0);
+        if( c ) {
+            playSound("grass.wav", 64);
+
+            inventory[selSlot].amount -= 1;
+            if( !inventory[selSlot].amount )
+                inventory.erase(inventory.begin()+selSlot);
+            if( tileLerpActive ) {
+                tilePos = worldMousePos;
+                clickPos = mousePos;
+                tileLerpDiff = tilePos - V2{(float)tileRect.x, (float)tileRect.y};
+                tileLerp = 0;
+            }
+        }
+    }
+}
+void Player_AltUse() {
+    // remove tiles at mouse
+    int c = World_ChangeTile({}, V2Int{(int)worldMousePos.x,(int)worldMousePos.y}, 0);
+    if( c ) {
+        playSound("grass.wav", 64);
+        Player_AddWorldChange();
     }
 }
 void Player_ReleaseUse() {
-    Gobj *hovered = Obj_CheckAtMouse();
-
+    
+    /* 
+    } */
     //if( !selObj || !hovered )
     //    return;
     
     //selObj->target = hovered;
+}
+void Player_Scroll(int dir) {
+    cameraScale += .1f * dir;
+    if( !inventory.size() )
+        return;
+    selSlot = (selSlot + dir) % inventory.size();
+    if( selSlot < 0 )
+        selSlot = inventory.size() - 1;
+    std::cout<<selSlot<<std::endl;
+}
+
+V2Int inventoryPadding = {8,8};
+V2Int inventorySize = {64,64};
+int inventoryFontSize = 24;
+// highlight similar tiles under mouse if button is held?
+void Player_RenderInventory() {
+    if( !inventory.size() )
+        return;
+    
+    Render_SetDrawColor(Color_RGBToInt(200,200,200), 64);
+    tileRect.x = 28;
+    tileRect.y = SCREEN_HEIGHT - 112;
+    tileRect.w = inventory.size() * (inventorySize.x + inventoryPadding.x) - inventoryPadding.x + 8; //remove extra padding?
+    tileRect.h = inventorySize.y + inventoryFontSize + inventoryPadding.y;
+    SDL_RenderDrawRect(renderer, &tileRect);
+
+
+
+    //add render rect functions to render to handle camera scaling and position
+    //just pass v2int and ints to function instead
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // render hotbar
+    Render_String("INV", {32, SCREEN_HEIGHT - 80},16,24);
+    for( int i = 0; i < inventory.size(); i++ ) {
+        tileRect.x = 32 + (inventorySize.x + inventoryPadding.x) * i ;
+        tileRect.y = SCREEN_HEIGHT - inventorySize.y - inventoryPadding.y*2;
+        tileRect.w = inventorySize.x;
+        tileRect.h = inventorySize.y;
+        SDL_RenderCopy(renderer, tileData[inventory[i].id].surfaces[0], NULL, &tileRect);
+
+        Render_String(std::to_string(inventory[i].amount),{(float)(32 + 32 * i), (float)(SCREEN_HEIGHT-32)}, 16,16);
+    }
+
+    // render tile at mouse
+    int tSize = tileSize * 1.4f;
+    int tileRX = (mousePos.x + tileSize), tileRY = (mousePos.y + tileSize);
+    if( tileLerp < tileLerpTime ) {
+        float f = tileLerp / tileLerpTime;
+        tileRX = (int)((clickPos.x + tileLerpDiff.x*f));
+        tileRY = (int)((clickPos.y + tileLerpDiff.y*f));
+        tileLerp += del;
+    }
+    tileRect.x = tileRX - 3;
+    tileRect.y = tileRY - 3;
+    tileRect.w = tSize + 6;
+    tileRect.h = tSize + 6;
+
+    //[SET COLOR FOR DISTANCE CHECK]
+    Render_SetDrawColor(Color_RGBToInt(255,255,255),255);
+    SDL_RenderDrawRect(renderer, &tileRect);
+
+    // position far enough away from mouse for animation but move depending if close to window borders
+    tileRect.x = tileRX;
+    tileRect.y = tileRY;
+    tileRect.w = tSize;
+    tileRect.h = tSize;
+    SDL_RenderCopy(renderer, tileData[inventory[selSlot].id].surfaces[0], NULL, &tileRect);
+}
+int Player_Render() {
+    Player_RenderInventory();
+    
+    return 0;
 }

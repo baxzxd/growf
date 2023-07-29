@@ -2,6 +2,7 @@
 #define OBJ_MAIN
 #include <SDL2/SDL.h>
 #include <string>
+#include <vector>
 #include <map>
 #include "../main.h"
 
@@ -21,6 +22,7 @@ struct GobjData{
     V2Int size;
     // bitshift to get r,g,b?
     int color = 256;
+    std::vector<SDL_Texture*> textures;
     int maxHealth = 100;
     Gobj_Func *funcs;
 };
@@ -34,7 +36,11 @@ typedef enum {
     LIVING = 5,
     DECAYING = 6,
     NO_COLLISION = 7,
-    STATIC = 8
+    STATIC = 8,
+    OBJ_FLAG0 = 17,
+    OBJ_FLAG1 = 18,
+    OBJ_FLAG2 = 19,
+    OBJ_FLAG3 = 20,
 } Gobj_Flags;
 struct Gobj;
 struct Gobj_Child {
@@ -53,6 +59,7 @@ struct Gobj {
     V2 pos;
     V2 cPos;
     V2 vel;
+    V2 look;
     int rotation = 0;
     int team = 0;
     int subType;

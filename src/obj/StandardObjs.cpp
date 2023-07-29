@@ -29,7 +29,7 @@ int Weapon_Update() {
     return 0;
 }
 int Weapon_Use(Gobj *obj) {
-    proj = Obj_Create("box",playerObj->pos + playerAim * 24.0f, playerAim * 500.0f, .5f);
+    proj = Obj_Create("box",obj->pos + obj->look * 24.0f, obj->look * 500.0f, .5f);
     proj->energy = -50.0f;
     return 0;
 }

@@ -25,13 +25,16 @@ void Box_Init();
 int Animal_Update();
 int Player_Update();
 void Player_Use();
+void Player_AltUse();
 void Player_ReleaseUse();
 int Player_Death(Gobj *obj);
 int Box_Update();
 int Hopper_Update();
 
+void Player_Scroll(int dir);
 int Weapon_Use(Gobj *obj);
 int Nail_Use(Gobj *obj);
 
 int Hopper_Render();
+int Player_Render();
 #endif

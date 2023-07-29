@@ -33,8 +33,20 @@ void Render_Main() {
         }
         for( int j = 0; j < particleSystems[i].particleCount; j++ ) {
             Particle *part = &particleSystems[i].particles[j];
-            part->pos = part->pos + part->vel * del;
 
+            if( part->stopTime ) {
+                if( del > part->stopTime ) {
+                    part->pos = part->pos + part->vel * part->stopTime;
+                }
+                else {
+                    part->pos = part->pos + part->vel * del;
+                }
+
+                part->stopTime -= del;
+                if( part->stopTime <= 0 )
+                    part->vel = {0,0};
+            }
+            
             partRect.x = particleSystems[i].pos.x + (int)part->pos.x;
             partRect.y = particleSystems[i].pos.y + (int)part->pos.y;
             partRect.w = (int)part->size.x;
@@ -63,13 +75,14 @@ void Particle_PlayEffect(V2Int pos, int p, int color, V2Int scale) {
 
     ps->pos = pos;
     ps->color = color;
-    ps->lifetime = 4;
+    ps->lifetime = .3f;
     ps->particleCount = p;
     ps->scale = scale;
     for( int i = 0; i < p; i++ ) {
         ps->particles[i].pos = {0,0};
         ps->particles[i].size = {(float)scale.x,(float)scale.y};
-        ps->particles[i].vel = RandV2(50);
+        ps->particles[i].vel = RandV2(150);
+        ps->particles[i].stopTime = .1f;
     }
 }
 void Render_String(string s, V2 pos, int w, int h) {
@@ -81,7 +94,52 @@ void Render_String(string s, V2 pos, int w, int h) {
         SDL_RenderCopy(renderer,charTextures[(int)s[i]], NULL, &textRect);
     }
 }
+SDL_Rect renderRect;
+V2 cameraPos;
+float cameraScale = 1.0f;
+void Render_RectF( V2 pos, V2 size, Color color ) {
+    SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
+    pos = (pos*cameraScale + cameraPos) ;
+    size = size * cameraScale;
+    renderRect.x = (int)pos.x;
+    renderRect.y = (int)pos.y;
+    renderRect.w = (int)size.x;
+    renderRect.h = (int)size.y;
+    SDL_RenderFillRect(renderer, &renderRect);
+}
+void Render_Rect( V2 pos, V2 size, Color color ) {
+    SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
+    pos = pos + cameraPos * cameraScale;
+    size = size * cameraScale;
+    renderRect.x = (int)pos.x;
+    renderRect.y = (int)pos.y;
+    renderRect.w = (int)size.x;
+    renderRect.h = (int)size.y;
+    SDL_RenderDrawRect(renderer, &renderRect);
 
+}
+void Render_Copy( SDL_Texture *texture, V2 pos, V2 size ) {
+    pos = Render_PosToView(pos);
+    size = size * cameraScale;
+    renderRect.x = (int)pos.x;
+    renderRect.y = (int)pos.y;
+    renderRect.w = (int)size.x;
+    renderRect.h = (int)size.y;
+    SDL_RenderCopy(renderer, texture, NULL, &renderRect);
+}
+V2 Render_PosToView(V2 pos) {
+    return (pos*cameraScale + cameraPos);
+}
+void Render_SetCameraOffset( V2 pos ) {
+    pos = pos * cameraScale;
+
+    if( pos.x > SCREEN_WIDTH/2 ) {
+        cameraPos.x =  SCREEN_WIDTH/2 - pos.x;
+    }
+    if( pos.y > SCREEN_HEIGHT/2 ) {
+        cameraPos.y = SCREEN_HEIGHT/2 - pos.y;
+    }
+}
 int Render_Init() {
     // Initialize SDL
     if(SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO) < 0) {

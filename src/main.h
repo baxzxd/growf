@@ -102,7 +102,6 @@ V2 RandV2(int r);
 const int TOTAL_KEYS = 256;
 extern int keys[256];
 extern int keysJustPressed[256];
-extern V2 cameraPos;
 
 extern V2 playerDir;
 extern V2 playerAim;
@@ -116,6 +115,7 @@ extern SDL_Rect textRect;
 extern float del;
 extern bool mouseClicked;
 extern bool mouseJustClicked;
+extern V2 worldMousePos;
 /// 0 - playing
 /// 1 - paused
 extern int gameState;

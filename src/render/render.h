@@ -3,6 +3,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <string>
+#include "../color.h"
 using namespace std;
 
 //particles rise up and fade
@@ -13,6 +14,7 @@ struct Particle {
     V2 vel;
     V2 size;
     int color;
+    float stopTime;
 };
 struct ParticleSystem {
     V2Int pos;
@@ -26,6 +28,8 @@ void Particle_PlayEffect(V2Int pos, int p, int color, V2Int scale);
 
 // rendering
 extern SDL_Window *window;
+extern V2 cameraPos;
+extern float cameraScale;
 extern SDL_Renderer *renderer;
 
 // graphics
@@ -38,6 +42,11 @@ extern SDL_Texture *charTextures[128];
 #define SCREEN_HEIGHT   600
 void Render_Main();
 void Render_String(string s, V2 pos, int w, int h);
+void Render_RectF( V2 pos, V2 size, Color color );
+void Render_Rect( V2 pos, V2 size, Color color );
+void Render_SetCameraOffset(V2 pos);
+void Render_Copy(SDL_Texture *texture, V2 pos, V2 size);
+V2 Render_PosToView(V2 pos);
 SDL_Texture *Render_PrerenderString(char* s); 
 SDL_Texture *Render_PrerenderStringsFromFile(char* path); 
 int Render_Init();

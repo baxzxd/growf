@@ -64,24 +64,35 @@ void World_Unstuckify(Gobj *obj) {
         }
     }
 }
+void Obj_TileColl(Gobj *obj) {
+    
+}
 // get overlaps at the same time and find pairs?
 void Obj_Physics(float del) {
     if( !o->held && !Obj_HasFlag(o, STATIC)) {
+        int colls = 0;
         V2 oldPos = o->pos;
         //check y
         V2 vD = o->vel * del;
         o->pos = o->pos + V2{0,vD.y}; 
-        bool coll = World_CheckToMap(o);
+        WorldTile *coll = World_CheckToMap(o);
         if( coll ) {
+            Obj_TileColl(o);
             o->pos = oldPos;
             o->vel.y = 0;
+            colls += 1;
         }
         oldPos = o->pos;
         o->pos = o->pos + V2{vD.x,0}; 
         coll = World_CheckToMap(o);
         if( coll ) {
+            if( !colls )
+                Obj_TileColl(o);
+
             o->pos = oldPos;
             o->vel.x = 0;
+            colls += 1;
+
             coll = World_CheckToMap(o);
             if( coll )
                 World_Unstuckify(o);

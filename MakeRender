@@ -11,8 +11,8 @@ OUTPUT = growf
 
 OBJS += $(patsubst %.cpp, %.o, $(shell find . -name \*.cpp))
 
-BASESRCDIR = ./src ./src/obj ./src/world ./src/gamemode ./src/render
-SRCDIR		= ./src/window
+BASESRCDIR = ./src ./src/window ./src/world ./src/gamemode ./src/obj
+SRCDIR		= ./src/render
 VPATH		= $(SRCDIR)
 SRC		= $(foreach dir, $(SRCDIR), $(wildcard $(dir)/*.cpp))
 BASESRC		= $(foreach dir, $(BASESRCDIR), $(wildcard $(dir)/*.cpp))

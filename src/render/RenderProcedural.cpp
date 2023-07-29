@@ -48,12 +48,12 @@ SDL_Texture *Noise_GenerateSimplex(int res, int sc, float freq, float min) {
     for( int x = 0; x < res / sc; x++ ) {
         for( int y = 0; y < res / sc; y++ ) {
             float noiseVal = (renderNoise.GetNoise((float)x,(float)y) + 1) / 2;
-            float v = (noiseVal - GetRadialValue(V2{(float)x,(float)y}, res)) / 2;
-            if( v < min )
-                v = 0;
+            //float v = (noiseVal - GetRadialValue(V2{(float)x,(float)y}, res)) / 2;
+            //if( v < min )
+            //    v = 0;
             drawTexRect.x = (int)(x * sc);
             drawTexRect.y = (int)(y * sc);
-            SDL_FillRect(testSurface, &drawTexRect, Color_RGBToInt(255*v,255*v,255*v));
+            SDL_FillRect(testSurface, &drawTexRect, Color_RGBToInt(255*noiseVal,255*noiseVal,255*noiseVal));
         }
     }
 

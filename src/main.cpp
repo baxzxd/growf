@@ -32,6 +32,7 @@
 #include <algorithm>
 #include <time.h>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_mixer.h>
 #include <SDL2/SDL_ttf.h>
 #include "main.h"
 #include "joystick.h"
@@ -94,8 +95,8 @@ void UpdateMouseRect() {
 //remove direct access to joypressed and keypressed and add actions with bindings
 bool mouseClicked = false;
 bool mouseJustClicked = false;
-V2 cameraPos;
 V2Int tileMousePos;
+V2 worldMousePos;
 WorldTile *t;
 int selectedTile = 0;int tilesChanged = 0;
 void EnterGameLoop() {
@@ -126,13 +127,10 @@ void EnterGameLoop() {
         else {
             mousePos = GetMousePos();
         }
-        mousePos = mousePos - cameraPos;
+        worldMousePos = mousePos/cameraScale;// - cameraPos;
+        std::cout<<worldMousePos.x/tileSize<<":"<<worldMousePos.y/tileSize<<std::endl;
         UpdateMouseRect();
-
-        // fire projectile
-        V2 d = mousePos - playerObj->pos;
-        playerAim = d.Norm();
-
+        
         Window_Main();
 
         // Initialize renderer color white for the background
@@ -162,23 +160,30 @@ void EnterGameLoop() {
                         mouseClicked = true;
                         mouseJustClicked = true;
                         Player_Use();
-                        
-                        tilesChanged = 0;
-                        World_ChangeTile("grass", V2Int{(int)mousePos.x,(int)mousePos.y}, 2);
                     break;
-                    case 2:
-                        Player_ReleaseUse();
+                    case 3:
+                        Player_AltUse();
                     break;
 
                 }
             break;
             case SDL_MOUSEBUTTONUP:
-                mouseClicked = false;
-                mouseJustClicked = false;
-                usingJoystick = false;
-                Player_ReleaseUse();
-            break;
+                    std::cout<<(int)e.button.button<<std::endl;
+                    switch(e.button.button) {
+                        case 1:
+                        mouseClicked = false;
+                        mouseJustClicked = false;
+                        usingJoystick = false;
+                        
+                        Player_ReleaseUse();
+                        break;
+                    }
+                break;
 
+            case SDL_MOUSEWHEEL:
+                Player_Scroll(e.wheel.y);
+            break;
+            
             case SDL_KEYDOWN:
             case SDL_KEYUP:
                 usingJoystick = false;
@@ -240,10 +245,12 @@ int main(int argc, char* argv[])
     // Unused argc, argv
     (void) argc;
     (void) argv;
-    
+    SDL_Init(SDL_INIT_EVERYTHING);
     TTF_Init();
     Joystick_Init();
 
+    //SDL_InitA
+    initAudio();
     // init
     Render_Init();
 

@@ -111,35 +111,25 @@ void Obj_Init() {
 
 // display angled objects as 2 rects?
 void Obj_Render(Gobj *obj) {   
-    V2 pos = Obj_GetCameraPos(obj);
-    squareRect.x = (int)pos.x;
-    squareRect.y = (int)pos.y;
+    V2 pos = obj->pos;
     if( Obj_HasFlag(obj, SHADOW) ) {
-        SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 96);
-        
-        squareRect.w = 48;
-        squareRect.h = (int)(obj->data->size.x * obj->scale);
-
-        SDL_RenderFillRect(renderer, &squareRect);
+        //Render_DrawRectF( pos, V2{48.0f, obj->data->size.x * obj->scale}, COLOR_BLACK );
     }
 
-    squareRect.h = (int)obj->size.y;
-    squareRect.w = (int)obj->size.x;
-    Render_SetDrawColor(Color_Brightness(obj->data->color, .5f), 0xFF);
-    SDL_RenderFillRect(renderer, &squareRect);
+    if( obj->data->textures.size() ) {
+        //Render_Copy(obj->data->textures[0], pos, obj->size);
+    }
+    else {
+       // Render_DrawRectF( pos, obj->size, Color_Brightness(obj->data->color, .5f));
+        
+        float healthRatio = ((float)obj->health/(float)obj->data->maxHealth);
+        if( healthRatio > 1 )
+            healthRatio = 1;
+        V2 s = obj->size * healthRatio;
+        V2 d = (obj->size - s)/2;
+        Render_RectF(pos + d, s, Color{});
+    }
     
-    float healthRatio = ((float)obj->health/(float)obj->data->maxHealth);
-    if( healthRatio > 1 )
-        healthRatio = 1;
-    V2 s = obj->size * healthRatio;
-    squareRect.w = (int)s.x; 
-    squareRect.h = (int)s.y; 
-
-    V2 d = (obj->size - s)/2;
-    squareRect.x = (int)(pos.x + d.x);
-    squareRect.y = (int)(pos.y + d.y);
-    Render_SetDrawColor(obj->data->color, 0xFF);
-    SDL_RenderFillRect(renderer, &squareRect);
 }     
 
 //(OBJNAME)_ChildTick function?

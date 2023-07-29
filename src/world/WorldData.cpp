@@ -31,7 +31,7 @@ void World_SerializeWorld() {
     fout.open("file.save", ios::out);
     for( int x = 0; x < worldDim * chunkSize; x++ ) {
         for( int y = 0; y < worldDim * chunkSize; y++ ) {
-            fout<<World_GetTile(x,y)->data->id;//fout.write((char*) &World_GetTile(x,y)->height, sizeof(World_GetTile(x,y)->height));
+            //fout<<World_GetTile(x,y)->data->id;//fout.write((char*) &World_GetTile(x,y)->height, sizeof(World_GetTile(x,y)->height));
         }
     }
 

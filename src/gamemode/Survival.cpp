@@ -31,7 +31,7 @@ void Survival_Tick() {
             V2Int tile;
             for( int i = 0; i < 5; i++ ) {
                 tile = {rand()%chunkSize,rand()%chunkSize};
-                if( chunks[chunk.x][chunk.y].tiles[tile.x][tile.y].height )
+                if( chunks[chunk.x][chunk.y].tiles[CHUNK_GROUND][tile.x][tile.y].height )
                     continue;
                 
                 break;
@@ -47,6 +47,7 @@ void Survival_Tick() {
                 return; 
             V2 pos = {(chunk.x * chunkSize + tile.x) * tileSize,(chunk.y * chunkSize + tile.y) * tileSize};
             Gobj *spawn = Obj_Create("dog",pos,RandV2(100),2);
+            Obj_SetFlag(spawn, OBJ_FLAG0, true);
             spawn->team = 1;
             spawn->state = 2;
             spawns[r] = spawn;

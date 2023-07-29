@@ -9,7 +9,10 @@ typedef enum {
     TIMERGROWTH = 0,
     TIMERDECAY = 1,
     TIMERTARGET = 2,
-    TIMERMISC = 3
+    TIMERMISC = 3,
+    OBJ_TIMER0 = 6,
+    OBJ_TIMER1 = 7,
+    OBJ_TIMER2 = 8
 } Gobj_Timers;
 typedef enum {
     OBJPARENT = 0,

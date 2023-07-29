@@ -14,18 +14,25 @@
 
 int MoveToAndAttack(Gobj *obj, Gobj *t, float speed, float minDist, float attackDist) {
     float targetDist = Obj_SqrDist(obj,t);
-    if( targetDist < minDist ) {
-        Obj_MoveTo(obj, t, speed);
-        if( targetDist < attackDist ) {
+    if( targetDist > minDist ) 
+        return 0;
+    Obj_MoveTo(obj, t, speed);
+    if( targetDist < attackDist ) {
+        if( Obj_HasFlag(obj, OBJ_FLAG0) ) {
+            if( Obj_TickTimer(obj, OBJ_TIMER0, .5f) ) {
+                obj->look = (t->pos - obj->pos).Norm();
+                Weapon_Use(obj);
+            }
+        }
+        else {
             Obj_GiveHealth(t, -1);
             t->vel = t->vel + (t->pos-obj->pos).Norm() * 100;
             t->immunity = .4f;
-            return 2;
-            // add timer
         }
-        return 1;
+        return 2;
+        // add timer
     }
-    return 0;
+    return 1;
 }
 int Animal_Update() {
     bool m = false;
@@ -46,7 +53,7 @@ int Animal_Update() {
             }
 
             if( Obj_GetPointed(o, OBJTARGET) ) {
-                if( !MoveToAndAttack(o, Obj_GetPointed(o, OBJTARGET), 95.0f, 250, 24) ) {
+                if( !MoveToAndAttack(o, Obj_GetPointed(o, OBJTARGET), 95.0f, 250, 120) ) {
                     if( Obj_TickTimer(o, TIMERTARGET, 1)) {
                         Obj_SetPointed(o, 0, OBJTARGET);
                     }

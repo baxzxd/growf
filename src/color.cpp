@@ -27,6 +27,16 @@ int Color_Brightness(int color, float f) {
     b *= f;
     return Color_RGBToInt(r,g,b);
 }
+Color Color_FromValues(int r, int g, int b, int a) {
+    Color c;
+    c.r = r;
+    c.g = g;
+    c.b = b;
+    c.a = a;
+    c.c = Color_RGBToInt(r,g,b);
+    return c;
+}
+
 uint32_t Color_rgb(double ratio)
 {
     //we want to normalize ratio so that it fits in to 6 regions

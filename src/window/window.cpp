@@ -16,27 +16,16 @@ SDL_Point mousePoint;
 std::vector<Window> windows;
 Window *win;
 
-//tile icon over mouse that gets lerped into position and once in place regrows on mouse
-//dial for tile inventory?
-float tileLerp = 0;
-float tileLerpTime = .2f;
-V2Int tilePos;
-V2Int clickPos;
-void OnTilePlaced(V2Int p) { //[CHANGE] maybe pass tile
-    tilePos = p;
-    clickPos = {(int)mousePos.x,(int)mousePos.y};
-    tileLerp = 0;
-}
 float f1;
 float f2;
 void ValueChange1(float f) {
     f1 = f;
-    noiseee = Noise_GenerateSimplex(128, 1, f1,f2);
+    noiseee = Noise_GenerateSimplex(128, 8, f1,f2);
 
 }
 void ValueChange2(float f) {
     f2 = f;
-    noiseee = Noise_GenerateSimplex(128, 1, f1,f2);
+    noiseee = Noise_GenerateSimplex(128, 8, f1,f2);
 
 }
 void ButtonClick() {
