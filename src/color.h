@@ -4,7 +4,7 @@
 #include <SDL2/SDL_ttf.h>
 #include "main.h"
 
-typedef struct Color {
+struct Color {
     int r;
     int g;
     int b;
@@ -16,6 +16,6 @@ int Color_GetColorValue();
 Color Color_FromValues(int r, int g, int b, int a);
 void Color_RGBFromInt(int c, int *r, int *g, int *b);
 int Color_RGBToInt(int r, int g, int b);
-int Color_Brightness(int c, float f);
+Color Color_Brightness(Color c, float f);
 int Color_LerpColor(int color, int finalColor, float fraction);
 #endif

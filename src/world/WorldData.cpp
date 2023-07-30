@@ -16,7 +16,7 @@
 
 std::map<std::string, TileData> tileData;
 TileData tDa;
-void AddTileToData( std::string id, int c, bool flows ) {
+void AddTileToData( std::string id, Color c, bool flows ) {
     tDa.id = id;
     tDa.c = c;
     tDa.flows = flows;

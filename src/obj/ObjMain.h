@@ -5,6 +5,7 @@
 #include <vector>
 #include <map>
 #include "../main.h"
+#include "../color.h"
 
 struct Gobj;
 struct Gobj_Func {
@@ -21,7 +22,7 @@ struct GobjData{
     /// possibly rename to basescale
     V2Int size;
     // bitshift to get r,g,b?
-    int color = 256;
+    Color color;
     std::vector<SDL_Texture*> textures;
     int maxHealth = 100;
     Gobj_Func *funcs;
@@ -64,7 +65,7 @@ struct Gobj {
     int team = 0;
     int subType;
     int health = 10;
-    int color = 256;
+    Color color;
     int growthStage;
     float growth;
     float scale = 1;
@@ -123,7 +124,7 @@ extern int totalObjects;
 const int maxObjects = 1024;
 extern Gobj objects[maxObjects];
 extern std::map<std::string, GobjData> objData;
-extern Gobj_Func objFuncs[8];
+extern Gobj_Func objFuncs[9];
 extern Gobj *playerObj;
 extern Gobj *o;
 extern Gobj *selObj;

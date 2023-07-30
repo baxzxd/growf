@@ -79,7 +79,6 @@ bool usingJoystick = false;
 
 int mouseX, mouseY;
 V2 GetMousePos() {
-    int mouseX,mouseY;
     SDL_GetMouseState(&mouseX,&mouseY);
     return {(float)mouseX, (float)mouseY};
 }
@@ -93,7 +92,8 @@ void UpdateMouseRect() {
 }
 
 //remove direct access to joypressed and keypressed and add actions with bindings
-bool mouseClicked = false;
+bool mouseClicked;
+bool altClicked;
 bool mouseJustClicked = false;
 V2Int tileMousePos;
 V2 worldMousePos;
@@ -116,10 +116,6 @@ void EnterGameLoop() {
         tick = SDL_GetPerformanceCounter();
         del = (float)((tick - lastTick)) / (float)(SDL_GetPerformanceFrequency());
 
-        
-        //
-
-
         //check window collision then world collision on click
         if( usingJoystick ) {
             mousePos = playerObj->pos + controllerCursorPos;
@@ -127,8 +123,9 @@ void EnterGameLoop() {
         else {
             mousePos = GetMousePos();
         }
-        worldMousePos = mousePos/cameraScale;// - cameraPos;
-        std::cout<<worldMousePos.x/tileSize<<":"<<worldMousePos.y/tileSize<<std::endl;
+
+        // cache long wires as surfaces?
+        worldMousePos = (mousePos - cameraPos)/cameraScale;
         UpdateMouseRect();
         
         Window_Main();
@@ -159,10 +156,9 @@ void EnterGameLoop() {
                     case 1:
                         mouseClicked = true;
                         mouseJustClicked = true;
-                        Player_Use();
                     break;
                     case 3:
-                        Player_AltUse();
+                        altClicked = true;
                     break;
 
                 }
@@ -176,6 +172,9 @@ void EnterGameLoop() {
                         usingJoystick = false;
                         
                         Player_ReleaseUse();
+                        break;
+                        case 3:
+                        altClicked = false;
                         break;
                     }
                 break;

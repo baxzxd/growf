@@ -54,8 +54,8 @@ void Render_CharToTextures(int size,
 Uint8 fR, Uint8 fG, Uint8 fB,
 Uint8 bR, Uint8 bG, Uint8 bB);
 void Render_SetDrawColor(int c, int alpha);
-SDL_Surface *Render_CreateSpeckledSurface(int w, int h, int baseColor, int sColor, int sAmount, int sW, int sH );
-SDL_Texture *Render_CreateSpeckledTexture(int w, int h, int baseColor, int sColor, int sAmount, int sW, int sH );
-SDL_Texture *Noise_GenerateSimplex(int res, int sc, float freq, float min);
+SDL_Surface *Render_CreateSpeckledSurface(int w, int h, Color baseColor, Color sColor, int sAmount, int sW, int sH );
+SDL_Texture *Render_CreateSpeckledTexture(int w, int h, Color baseColor, Color sColor, int sAmount, int sW, int sH );
+SDL_Texture *Noise_GenerateSimplex(int res, int sc, float freq, float min, Color c);
 void save_texture(SDL_Renderer *ren, SDL_Texture *tex, const char *filename);
 #endif

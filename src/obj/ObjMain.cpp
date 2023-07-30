@@ -120,14 +120,14 @@ void Obj_Render(Gobj *obj) {
         //Render_Copy(obj->data->textures[0], pos, obj->size);
     }
     else {
-       // Render_DrawRectF( pos, obj->size, Color_Brightness(obj->data->color, .5f));
+        Render_RectF( pos, obj->size, Color_Brightness(obj->data->color, .5f));
         
         float healthRatio = ((float)obj->health/(float)obj->data->maxHealth);
         if( healthRatio > 1 )
             healthRatio = 1;
         V2 s = obj->size * healthRatio;
         V2 d = (obj->size - s)/2;
-        Render_RectF(pos + d, s, Color{});
+        Render_RectF(pos + d, s, obj->data->color);
     }
     
 }     

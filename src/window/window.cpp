@@ -20,12 +20,12 @@ float f1;
 float f2;
 void ValueChange1(float f) {
     f1 = f;
-    noiseee = Noise_GenerateSimplex(128, 8, f1,f2);
+    //noiseee = Noise_GenerateSimplex(128, 8, f1,f2);
 
 }
 void ValueChange2(float f) {
     f2 = f;
-    noiseee = Noise_GenerateSimplex(128, 8, f1,f2);
+   // noiseee = Noise_GenerateSimplex(128, 8, f1,f2);
 
 }
 void ButtonClick() {

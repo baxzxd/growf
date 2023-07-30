@@ -97,6 +97,7 @@ void Player_ChangeGrabbed( int change ) {
 bool Player_HasGrab() {
     return grabSelection != -1 && !playerObj->children[grabSelection].inactive;
 }
+bool wiringMode = false;
 int Player_Update() {
     V2 joyAxes = {joystickAxes[0], joystickAxes[1] };
     if( abs(joyAxes.x) < .05f )
@@ -132,6 +133,17 @@ int Player_Update() {
     hold to choose and use?
     double tap to drop?
     */
+    if( mouseClicked ) {
+        Player_Use();
+    }
+    if( altClicked ) {
+        Player_AltUse();
+    }
+    
+    if( keysJustPressed[SDL_SCANCODE_R] ) {
+        wiringMode = !wiringMode;  
+    }
+
     if( keys[SDL_SCANCODE_G] || joyPressed[SDL_CONTROLLER_BUTTON_B] ) {
         //try grba
         if( keysJustPressed[SDL_SCANCODE_G] || joyJustPressed[SDL_CONTROLLER_BUTTON_B]) {
@@ -178,30 +190,51 @@ int Player_Update() {
     Render_SetCameraOffset(o->pos);
     return 0;
 }
+bool Player_HoldingObj() {
+    return grabSelection != -1 && !playerObj->children[grabSelection].inactive;
+}
 void Player_Use() {
     //selObj = Obj_CheckAtMouse();
-    if( grabSelection != -1 && !playerObj->children[grabSelection].inactive ) {
+    if( Player_HoldingObj() ) {
         Gobj_Child ch = playerObj->children[grabSelection];
-        
-        // PASS POINTER TO FUNC? DAMN
         if( ch.o->data->funcs->funcUse ) {
             ch.o->look = o->look;
             ch.o->data->funcs->funcUse(ch.o);
-
+            
+            // check if obj became static
             if( Obj_HasFlag(ch.o, STATIC) )
                 Obj_RemoveChild(playerObj, grabSelection);
         }
     }
     else {
-        if( !inventory.size() ) 
-            return;
-        int c = World_ChangeTile(inventory[selSlot].id, V2Int{(int)worldMousePos.x,(int)worldMousePos.y}, 0);
+        bool takeInventory = true;
+        std::string selId;
+        CHUNK_LAYERS placeLayer;
+        if( wiringMode ) {
+            selId = "stone";
+            placeLayer = CHUNK_WIRING;
+            takeInventory = false;
+
+            //dont autoconnect like redstone instead allow manual connections between wires with left click
+            
+        }
+        else {
+            if( !inventory.size() ) 
+                return;
+            selId = inventory[selSlot].id;
+            placeLayer = CHUNK_AIR;
+        }
+
+        int c = World_ChangeTile(selId, V2Int{(int)worldMousePos.x,(int)worldMousePos.y}, 0, placeLayer);
         if( c ) {
             playSound("grass.wav", 64);
+            
+            if( takeInventory ) {
+                inventory[selSlot].amount -= 1;
+                if( !inventory[selSlot].amount )
+                    inventory.erase(inventory.begin()+selSlot);
+            }
 
-            inventory[selSlot].amount -= 1;
-            if( !inventory[selSlot].amount )
-                inventory.erase(inventory.begin()+selSlot);
             if( tileLerpActive ) {
                 tilePos = worldMousePos;
                 clickPos = mousePos;
@@ -211,12 +244,25 @@ void Player_Use() {
         }
     }
 }
-void Player_AltUse() {
+
+void Player_DamageTile() {
     // remove tiles at mouse
-    int c = World_ChangeTile({}, V2Int{(int)worldMousePos.x,(int)worldMousePos.y}, 0);
+    int c = World_ChangeTile({}, V2Int{(int)worldMousePos.x,(int)worldMousePos.y}, 0, CHUNK_AIR);
     if( c ) {
         playSound("grass.wav", 64);
         Player_AddWorldChange();
+    }
+}
+
+void Player_AltUse() {
+    if( Player_HoldingObj() ) {
+
+    }
+    else {
+        WorldTile *tile = World_GetTile((int)worldMousePos.x, (int)worldMousePos.y, CHUNK_AIR);
+        if( tile && tile->data ) {
+            Player_DamageTile();
+        }
     }
 }
 void Player_ReleaseUse() {
@@ -311,6 +357,10 @@ void Player_RenderInventory() {
 }
 int Player_Render() {
     Player_RenderInventory();
-    
+    if(wiringMode) {
+        tileRect.x = SCREEN_WIDTH - 48;
+        tileRect.y = 32;
+        SDL_RenderCopy(renderer, tileData["lava"].surfaces[0], NULL, &tileRect);    
+    }
     return 0;
 }

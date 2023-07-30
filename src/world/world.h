@@ -13,7 +13,7 @@ extern SDL_Rect noiseDestRect;
 const int worldDim = 24;
 const int chunkSize = 8;
 const int tileSize = 16;
-const int CHUNK_LAYER_COUNT = 3;
+const int CHUNK_LAYER_COUNT = 4;
 typedef enum CHUNK_LAYERS {
     CHUNK_VOID,
     CHUNK_GROUND,
@@ -34,7 +34,7 @@ struct WorldChange {
 extern WorldChange change;
 struct TileData {
     std::string id;
-    int c;
+    Color c;
     int health;
     CHUNK_LAYERS layerRestriction = CHUNKS_ALL;
     bool flows = false;
@@ -72,8 +72,8 @@ WorldTile *World_CheckToMap(Gobj *obj);
 //WorldTile *World_GetTile(int x, int y);
 WorldTile *World_GetTile(int x, int y, CHUNK_LAYERS layer);
 extern std::map<std::string, TileData> tileData;
-void AddTileToData(std::string id, int c, bool flows);
-int World_ChangeTile(std::string id, V2Int pos, int size);
+void AddTileToData(std::string id, Color c, bool flows);
+int World_ChangeTile(std::string id, V2Int pos, int size, CHUNK_LAYERS layer);
 void World_SerializeWorld();
 void World_DeserializeWorld();
 #endif

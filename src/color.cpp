@@ -18,14 +18,11 @@ int Color_LerpColor(int color, int finalColor, float fraction) {
 }
 //input: ratio is between 0.0 to 1.0
 //output: rgb color
-int Color_Brightness(int color, float f) {
-    int r,g,b;
-    Color_RGBFromInt(color, &r,&g,&b);
-
-    r *= f;
-    g *= f;
-    b *= f;
-    return Color_RGBToInt(r,g,b);
+Color Color_Brightness(Color c, float f) {
+    c.r *= f;
+    c.g *= f;
+    c.b *= f;
+    return c;
 }
 Color Color_FromValues(int r, int g, int b, int a) {
     Color c;

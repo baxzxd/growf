@@ -76,7 +76,7 @@ void Obj_Physics(float del) {
         V2 vD = o->vel * del;
         o->pos = o->pos + V2{0,vD.y}; 
         WorldTile *coll = World_CheckToMap(o);
-        if( coll ) {
+        if( coll && coll->data ) {
             Obj_TileColl(o);
             o->pos = oldPos;
             o->vel.y = 0;
@@ -85,16 +85,16 @@ void Obj_Physics(float del) {
         oldPos = o->pos;
         o->pos = o->pos + V2{vD.x,0}; 
         coll = World_CheckToMap(o);
-        if( coll ) {
+        if( coll && coll->data ) {
             if( !colls )
-                Obj_TileColl(o);
+                Obj_TileColl(o);      ////////obj coll struct instead with enum for tile or obj coll
 
             o->pos = oldPos;
             o->vel.x = 0;
             colls += 1;
 
             coll = World_CheckToMap(o);
-            if( coll )
+            if( coll && coll->data )
                 World_Unstuckify(o);
         }
 

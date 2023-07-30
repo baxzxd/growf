@@ -60,6 +60,12 @@ struct V2 {
         v.y = y/(float)i;
         return v;
     }
+    V2 operator/(float i) {
+        V2 v = {x,y};
+        v.x = x/(float)i;
+        v.y = y/(float)i;
+        return v;
+    }
     float Len() {
         return sqrt(x*x + y*y);
     }
@@ -114,6 +120,7 @@ extern SDL_Rect textRect;
 
 extern float del;
 extern bool mouseClicked;
+extern bool altClicked;
 extern bool mouseJustClicked;
 extern V2 worldMousePos;
 /// 0 - playing

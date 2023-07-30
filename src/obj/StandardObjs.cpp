@@ -25,7 +25,17 @@ Gobj* proj;
 void Weapon_StaticInit() {
     //init bullet types here mayb?
 }
+
+int Weapon_Init() {
+    return 0;
+}
 int Weapon_Update() {
+    return 0;
+}
+int Weapon_Render() {
+    return 0;
+}
+int Weapon_Death(Gobj *obj) {
     return 0;
 }
 int Weapon_Use(Gobj *obj) {

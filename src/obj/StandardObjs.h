@@ -32,9 +32,14 @@ int Box_Update();
 int Hopper_Update();
 
 void Player_Scroll(int dir);
-int Weapon_Use(Gobj *obj);
 int Nail_Use(Gobj *obj);
 
 int Hopper_Render();
 int Player_Render();
+
+int Weapon_Init();
+int Weapon_Use(Gobj *obj);
+int Weapon_Render();
+int Weapon_Update();
+int Weapon_Death(Gobj *obj);
 #endif

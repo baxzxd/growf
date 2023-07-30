@@ -46,11 +46,11 @@ void Render_Main() {
                 if( part->stopTime <= 0 )
                     part->vel = {0,0};
             }
-            
-            partRect.x = particleSystems[i].pos.x + (int)part->pos.x;
-            partRect.y = particleSystems[i].pos.y + (int)part->pos.y;
-            partRect.w = (int)part->size.x;
-            partRect.h = (int)part->size.y;
+            V2 p = Render_PosToView(V2{particleSystems[i].pos.x,particleSystems[i].pos.y} + part->pos);
+            partRect.x = (int)p.x;
+            partRect.y = (int)p.y;
+            partRect.w = (int)part->size.x * cameraScale;
+            partRect.h = (int)part->size.y * cameraScale;
             Render_SetDrawColor(particleSystems[i].color, 255);
             SDL_RenderFillRect(renderer, &partRect);
         }
@@ -82,7 +82,7 @@ void Particle_PlayEffect(V2Int pos, int p, int color, V2Int scale) {
         ps->particles[i].pos = {0,0};
         ps->particles[i].size = {(float)scale.x,(float)scale.y};
         ps->particles[i].vel = RandV2(150);
-        ps->particles[i].stopTime = .1f;
+        ps->particles[i].stopTime = .15f;
     }
 }
 void Render_String(string s, V2 pos, int w, int h) {
